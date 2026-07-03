@@ -1,0 +1,97 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* ── Base mobile-first resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, sans-serif;
+  background-color: #f3f4f6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── PWA full-screen app shell ── */
+#root {
+  display: flex;
+  flex-direction: column;
+  /* On real devices the app fills the whole screen.
+     In a desktop browser we centre a phone-width column. */
+  align-items: center;
+  justify-content: center;
+}
+
+/* The mobile app shell — constrained width on desktop, full on mobile */
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollable page content ── */
+/* Pages use this class for their scrollable inner area */
+.page-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Leave room for fixed bottom nav (64px) */
+  padding-bottom: 80px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Safe area support for notched devices ── */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Leaflet map overrides ── */
+/* Prevent Leaflet controls from inheriting our font */
+.leaflet-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  z-index: 0;
+}
+
+/* ── Utility: hide scrollbar but keep scroll ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Tap active feedback ── */
+.tap-active {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.tap-active:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}

@@ -1,0 +1,183 @@
+import { useNavigate } from 'react-router-dom'
+import {
+  Bell,
+  Lock,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+  Shield,
+  Settings,
+  ClipboardList,
+} from 'lucide-react'
+import BottomNav from '../components/BottomNav.jsx'
+import mockUser from '../data/mockUser.js'
+
+// ── Section group wrapper ──────────────────────────────────────────────────────
+function SettingsGroup({ label, children }) {
+  return (
+    <div>
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 mb-2 block">
+        {label}
+      </span>
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Individual settings row ────────────────────────────────────────────────────
+function SettingsRow({ icon: Icon, label, iconBg = 'bg-gray-100', iconColor = 'text-gray-500', labelColor = 'text-gray-800', onPress }) {
+  return (
+    <button
+      onClick={onPress}
+      className="w-full flex items-center gap-3 px-4 py-3.5 tap-active active:bg-gray-50"
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+        <Icon size={15} className={iconColor} />
+      </div>
+      <span className={`flex-1 text-sm font-medium text-left ${labelColor}`}>
+        {label}
+      </span>
+      <ChevronRight size={16} className="text-gray-300 shrink-0" />
+    </button>
+  )
+}
+
+// ── Stat card ──────────────────────────────────────────────────────────────────
+function StatCard({ label, value, active = false }) {
+  return (
+    <div
+      className={`flex-1 rounded-2xl p-3 flex flex-col items-center gap-1 ${
+        active
+          ? 'bg-blue-50 border-2 border-blue-100'
+          : 'bg-white border border-gray-100'
+      }`}
+    >
+      <ClipboardList
+        size={18}
+        className={active ? 'text-blue-600' : 'text-gray-400'}
+      />
+      <span
+        className={`text-xl font-bold ${
+          active ? 'text-blue-700' : 'text-gray-800'
+        }`}
+      >
+        {value}
+      </span>
+      <span
+        className={`text-[10px] font-bold uppercase tracking-wider ${
+          active ? 'text-blue-500' : 'text-gray-400'
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+// ── Main screen ────────────────────────────────────────────────────────────────
+export default function ProfileScreen() {
+  const navigate = useNavigate()
+
+  // Initials derived from full name
+  const initials = mockUser.full_name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+
+      {/* Header */}
+      <div className="bg-white h-14 flex items-center justify-center border-b border-gray-100">
+        <span className="font-bold text-gray-900 text-base">Profile</span>
+      </div>
+
+      <div className="page-scroll px-4 pt-6 space-y-5">
+
+        {/* Avatar + name + location info */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">{initials}</span>
+            </div>
+            {/* Settings gear badge */}
+            <button className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm tap-active">
+              <Settings size={13} className="text-gray-600" />
+            </button>
+          </div>
+
+          <div className="text-center">
+            <h2 className="text-lg font-bold text-gray-900">
+              {mockUser.full_name}
+            </h2>
+            {/* Email + verified badge */}
+            <div className="flex items-center justify-center gap-1 mt-0.5">
+              <span className="text-sm text-gray-400">{mockUser.email}</span>
+              <Shield size={13} className="text-green-500 shrink-0" />
+            </div>
+            {/* Ward + assembly info */}
+            <div className="mt-1.5 flex items-center justify-center gap-1.5">
+              <span className="text-xs text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full font-medium">
+                Ward 3
+              </span>
+              <span className="text-xs text-gray-400">•</span>
+              <span className="text-xs text-gray-500 font-medium">
+                Okaikwei North Municipal Assembly
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex gap-3">
+          <StatCard label="Total" value={mockUser.stats.total} active />
+          <StatCard label="Resolved" value={mockUser.stats.resolved} />
+          <StatCard label="Pending" value={mockUser.stats.pending} />
+        </div>
+
+        {/* Account settings */}
+        <SettingsGroup label="Account Settings">
+          <SettingsRow
+            icon={Bell}
+            label="Notifications"
+            onPress={() => {}}
+          />
+          <SettingsRow
+            icon={Lock}
+            label="Change Password"
+            onPress={() => {}}
+          />
+        </SettingsGroup>
+
+        {/* Support & legal */}
+        <SettingsGroup label="Support & Legal">
+          <SettingsRow
+            icon={HelpCircle}
+            label="Help & Support"
+            onPress={() => {}}
+          />
+          <SettingsRow
+            icon={LogOut}
+            label="Log Out"
+            iconBg="bg-red-50"
+            iconColor="text-red-500"
+            labelColor="text-red-500"
+            onPress={() => navigate('/login')}
+          />
+        </SettingsGroup>
+
+        {/* App version footer */}
+        <p className="text-center text-xs text-gray-400 pb-2">
+          CitiFix v1.0.0 • Made for Ghana
+        </p>
+
+      </div>
+
+      <BottomNav />
+    </div>
+  )
+}
