@@ -68,7 +68,7 @@ The citizen-facing PWA is fully built (12 screens, polish pass complete). Supaba
 
 ```bash
 # Clone the repo
-git clone <repo-url>
+git clone <https://github.com/oseitutuotk/CITIFIX.git>
 cd citifix
 
 # Install dependencies
