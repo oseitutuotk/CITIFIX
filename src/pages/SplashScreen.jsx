@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Zap } from 'lucide-react'
 
 // SplashScreen — shown briefly on app launch.
-// Auto-navigates to Home after 2 seconds.
+// Auto-navigates to Home after 5 seconds.
 // Replace the Zap icon with the real CitiFix logo when ready.
 
 export default function SplashScreen() {
@@ -12,7 +12,7 @@ export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate('/', { replace: true })
-    }, 2000)
+    }, 5000)
 
     // Clean up the timer if the component unmounts early
     return () => clearTimeout(timer)

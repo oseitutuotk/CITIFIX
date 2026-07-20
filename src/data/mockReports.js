@@ -7,7 +7,7 @@ const mockReports = [
   {
     id: 'rpt-001',
     user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    category: 'water',
+    category: 'electricity',
     title: 'Burst Pipe at Cantonments Road',
     description: 'A major pipe has burst and water is flowing onto the road, creating a hazard for vehicles and pedestrians.',
     status: 'In Progress',

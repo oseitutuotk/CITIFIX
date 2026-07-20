@@ -5,6 +5,7 @@ import {
   Lightbulb,
   Trash2,
   Zap,
+  Waves,
   MoreHorizontal,
   Calendar,
   MapPin,
@@ -27,6 +28,7 @@ const CATEGORY_CONFIG = {
   drainage:     { icon: Droplets,      color: 'text-blue-500',   bg: 'bg-blue-50'   },
   streetlights: { icon: Lightbulb,     color: 'text-yellow-500', bg: 'bg-yellow-50' },
   waste:        { icon: Trash2,        color: 'text-gray-500',   bg: 'bg-gray-100'  },
+  water:        { icon: Waves,         color: 'text-cyan-500',   bg: 'bg-cyan-50'   },
   electricity:  { icon: Zap,           color: 'text-amber-500',  bg: 'bg-amber-50'  },
   other:        { icon: MoreHorizontal, color: 'text-purple-500', bg: 'bg-purple-50' },
 }

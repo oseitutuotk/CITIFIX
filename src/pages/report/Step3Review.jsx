@@ -23,19 +23,10 @@ import StatusBadge from '../../components/StatusBadge.jsx'
 import { useReport } from '../../hooks/useReport.js'
 import mockReports from '../../data/mockReports.js'
 
-// Roads icon — same custom SVG used in Step1Details for consistency
 function RoadsIcon({ size = 20 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 17h18M3 12h18M9 7h6" />
       <path d="M5 17l-2 5M19 17l2 5M5 7l-2-5M19 7l2-5" />
     </svg>
@@ -43,12 +34,20 @@ function RoadsIcon({ size = 20 }) {
 }
 
 const CATEGORY_INFO = {
-  roads:        { label: 'Roads',        icon: RoadsIcon  },
-  drainage:     { label: 'Drainage',     icon: Droplets   },
-  streetlights: { label: 'Streetlights', icon: Lightbulb  },
-  waste:        { label: 'Waste',        icon: Trash2     },
-  electricity:  { label: 'Electricity',  icon: Zap        },
+  roads:        { label: 'Roads',        icon: RoadsIcon      },
+  drainage:     { label: 'Drainage',     icon: Droplets       },
+  streetlights: { label: 'Streetlights', icon: Lightbulb      },
+  waste:        { label: 'Waste',        icon: Trash2         },
+  electricity:  { label: 'Electricity',  icon: Zap            },
   other:        { label: 'Other',        icon: MoreHorizontal },
+}
+
+// Builds an OSM embed URL centred on the given coordinates
+function getStaticMapUrl(coords) {
+  if (!coords) return null
+  const { lat, lng } = coords
+  const delta = 0.003
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - delta},${lat - delta},${lng + delta},${lat + delta}&layer=mapnik&marker=${lat},${lng}`
 }
 
 // ── Duplicate overlay ──────────────────────────────────────────────────────────
@@ -56,7 +55,6 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
   const navigate = useNavigate()
   const sheetRef = useRef(null)
 
-  // Drag-to-dismiss state
   const dragStartY = useRef(null)
   const [dragY, setDragY] = useState(0)
   const DISMISS_THRESHOLD = 100
@@ -94,7 +92,6 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
       style={{ backgroundColor: `rgba(0,0,0,${Math.max(0, 0.5 - dragY / 600)})` }}
       className="absolute inset-0 z-50 flex flex-col justify-end"
     >
-      {/* Bottom sheet */}
       <div
         ref={sheetRef}
         onClick={(e) => e.stopPropagation()}
@@ -107,20 +104,15 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
         }}
         className="bg-white rounded-t-3xl shrink-0 max-h-[92%] overflow-y-auto touch-none"
       >
-        {/* Drag handle */}
         <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4 cursor-grab" />
 
         <div className="px-4 pb-6 space-y-4">
-
-          {/* Heading */}
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
               <TriangleAlert size={18} className="text-orange-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">
-                Similar Report Found
-              </h2>
+              <h2 className="text-lg font-bold text-gray-900">Similar Report Found</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
                 A report in this category was submitted{' '}
                 <strong className="text-gray-700">recently</strong> nearby your location.
@@ -128,38 +120,28 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
             </div>
           </div>
 
-          {/* Existing report mini-card */}
           <button
             onClick={handleViewExisting}
             className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 flex items-center gap-3 text-left tap-active"
           >
             <div className="w-16 h-14 rounded-xl bg-gray-200 overflow-hidden shrink-0">
-              <img
-                src={similarReport.photo_urls[0]}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={similarReport.photo_urls[0]} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <StatusBadge status={similarReport.status} />
                 <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
-                  <Clock size={9} />
-                  {similarReport.display_date}
+                  <Clock size={9} /> {similarReport.display_date}
                 </span>
               </div>
-              <p className="text-sm font-semibold text-gray-800 truncate">
-                {similarReport.title}
-              </p>
+              <p className="text-sm font-semibold text-gray-800 truncate">{similarReport.title}</p>
               <p className="text-xs text-gray-400 flex items-center gap-0.5 mt-0.5">
-                <MapPin size={10} />
-                {similarReport.location_name}
+                <MapPin size={10} /> {similarReport.location_name}
               </p>
             </div>
             <ChevronRight size={16} className="text-gray-300 shrink-0" />
           </button>
 
-          {/* Hint */}
           <div className="flex items-start gap-1.5">
             <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
             <p className="text-xs text-blue-500 italic">
@@ -167,7 +149,6 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
             </p>
           </div>
 
-          {/* Actions */}
           <div className="space-y-2">
             <button
               type="button"
@@ -184,7 +165,6 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
               Submit Anyway
             </button>
           </div>
-
         </div>
       </div>
     </div>
@@ -195,7 +175,9 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
 export default function Step3Review() {
   const navigate = useNavigate()
   const { reportData } = useReport()
+
   const [showDuplicate, setShowDuplicate] = useState(false)
+  const [duplicateDetected, setDuplicateDetected] = useState(false)
 
   const categoryInfo = CATEGORY_INFO[reportData.category] || CATEGORY_INFO.other
   const CategoryIcon = categoryInfo.icon
@@ -205,11 +187,16 @@ export default function Step3Review() {
       ? reportData.customCategory
       : categoryInfo.label
 
+  const mapUrl = getStaticMapUrl(reportData.coords)
+
   function handleSubmit() {
-    // 50/50 duplicate simulation — replaced by real Supabase proximity
-    // check during backend integration
+    if (duplicateDetected) {
+      setShowDuplicate(true)
+      return
+    }
     const isDuplicate = Math.random() < 0.5
     if (isDuplicate) {
+      setDuplicateDetected(true)
       setShowDuplicate(true)
     } else {
       navigate('/report/success')
@@ -217,9 +204,7 @@ export default function Step3Review() {
   }
 
   return (
-    // position: relative so the overlay can use absolute inset-0
     <div className="flex flex-col h-full bg-gray-50 relative">
-
       <AppHeader title="Review Your Report" onBack={() => navigate('/report/step2')} />
 
       <div className="page-scroll px-4 pt-4 space-y-4">
@@ -243,12 +228,8 @@ export default function Step3Review() {
               <CategoryIcon size={20} className="text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Category
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate">
-                {displayCategoryLabel}
-              </p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</p>
+              <p className="text-base font-bold text-gray-900 truncate">{displayCategoryLabel}</p>
             </div>
             <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
               <Sparkles size={10} />
@@ -269,15 +250,28 @@ export default function Step3Review() {
           {/* Location */}
           <div className="p-4 border-b border-gray-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <MapPin size={11} />
-              Location Details
+              <MapPin size={11} /> Location Details
             </p>
             <p className="text-sm font-semibold text-gray-800 mb-2">
               {reportData.locationName || 'Location not set'}
             </p>
-            <div className="h-24 bg-gray-100 rounded-xl flex items-center justify-center">
-              <span className="text-gray-400 text-xs">Map preview</span>
+
+            {/* Static OSM map */}
+            <div className="h-32 rounded-xl overflow-hidden border border-gray-100">
+              {mapUrl ? (
+                <iframe
+                  src={mapUrl}
+                  title="Report location"
+                  className="w-full h-full border-0 pointer-events-none"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-xs text-gray-400">No location set</span>
+                </div>
+              )}
             </div>
+
             {reportData.coords && (
               <p className="text-[10px] text-gray-400 mt-1.5">
                 GPS: {reportData.coords.lat.toFixed(4)}° N,{' '}
@@ -286,7 +280,7 @@ export default function Step3Review() {
             )}
           </div>
 
-          {/* Photo evidence — horizontal scroll row of thumbnails */}
+          {/* Photo evidence */}
           {reportData.photos?.length > 0 && (
             <div className="p-4">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -309,8 +303,8 @@ export default function Step3Review() {
 
       </div>
 
-      {/* Fixed bottom action */}
-      <div className="absolute bottom-16 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 space-y-1.5">
+      {/* Fixed bottom actions */}
+      <div className="absolute bottom-16 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 space-y-2">
         <button
           onClick={handleSubmit}
           className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 tap-active"
@@ -318,21 +312,23 @@ export default function Step3Review() {
           Submit Report
           <Send size={16} />
         </button>
+
+        {/* More prominent Go Back — outlined button instead of plain text */}
         <button
           onClick={() => navigate('/report/step2')}
-          className="w-full text-center text-sm text-gray-500 font-medium py-1 tap-active"
+          className="w-full border border-gray-300 text-gray-600 font-semibold py-3 rounded-2xl flex items-center justify-center gap-1.5 tap-active"
         >
-          Need to change something? Go Back
+          <ChevronLeft size={16} />
+          Go Back
         </button>
-        <p className="text-center text-[10px] text-gray-400 uppercase tracking-wide pt-1">
-          By submitting, you agree that this information is accurate to the best
-          of your knowledge.
+
+        <p className="text-center text-[10px] text-gray-400 uppercase tracking-wide pt-0.5">
+          By submitting, you agree that this information is accurate to the best of your knowledge.
         </p>
       </div>
 
       <BottomNav />
 
-      {/* Duplicate overlay — renders on top of this screen when triggered */}
       {showDuplicate && (
         <DuplicateOverlay
           reportData={reportData}

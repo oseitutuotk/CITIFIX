@@ -12,7 +12,6 @@ import {
 import BottomNav from '../components/BottomNav.jsx'
 import mockUser from '../data/mockUser.js'
 
-// ── Section group wrapper ──────────────────────────────────────────────────────
 function SettingsGroup({ label, children }) {
   return (
     <div>
@@ -26,7 +25,6 @@ function SettingsGroup({ label, children }) {
   )
 }
 
-// ── Individual settings row ────────────────────────────────────────────────────
 function SettingsRow({ icon: Icon, label, iconBg = 'bg-gray-100', iconColor = 'text-gray-500', labelColor = 'text-gray-800', onPress }) {
   return (
     <button
@@ -44,7 +42,6 @@ function SettingsRow({ icon: Icon, label, iconBg = 'bg-gray-100', iconColor = 't
   )
 }
 
-// ── Stat card ──────────────────────────────────────────────────────────────────
 function StatCard({ label, value, active = false }) {
   return (
     <div
@@ -54,33 +51,20 @@ function StatCard({ label, value, active = false }) {
           : 'bg-white border border-gray-100'
       }`}
     >
-      <ClipboardList
-        size={18}
-        className={active ? 'text-blue-600' : 'text-gray-400'}
-      />
-      <span
-        className={`text-xl font-bold ${
-          active ? 'text-blue-700' : 'text-gray-800'
-        }`}
-      >
+      <ClipboardList size={18} className={active ? 'text-blue-600' : 'text-gray-400'} />
+      <span className={`text-xl font-bold ${active ? 'text-blue-700' : 'text-gray-800'}`}>
         {value}
       </span>
-      <span
-        className={`text-[10px] font-bold uppercase tracking-wider ${
-          active ? 'text-blue-500' : 'text-gray-400'
-        }`}
-      >
+      <span className={`text-[10px] font-bold uppercase tracking-wider ${active ? 'text-blue-500' : 'text-gray-400'}`}>
         {label}
       </span>
     </div>
   )
 }
 
-// ── Main screen ────────────────────────────────────────────────────────────────
 export default function ProfileScreen() {
   const navigate = useNavigate()
 
-  // Initials derived from full name
   const initials = mockUser.full_name
     .split(' ')
     .map((n) => n[0])
@@ -91,35 +75,28 @@ export default function ProfileScreen() {
   return (
     <div className="flex flex-col h-full bg-gray-50">
 
-      {/* Header */}
       <div className="bg-white h-14 flex items-center justify-center border-b border-gray-100">
         <span className="font-bold text-gray-900 text-base">Profile</span>
       </div>
 
       <div className="page-scroll px-4 pt-6 space-y-5">
 
-        {/* Avatar + name + location info */}
         <div className="flex flex-col items-center gap-2">
           <div className="relative">
             <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
               <span className="text-white text-2xl font-bold">{initials}</span>
             </div>
-            {/* Settings gear badge */}
             <button className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm tap-active">
               <Settings size={13} className="text-gray-600" />
             </button>
           </div>
 
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">
-              {mockUser.full_name}
-            </h2>
-            {/* Email + verified badge */}
+            <h2 className="text-lg font-bold text-gray-900">{mockUser.full_name}</h2>
             <div className="flex items-center justify-center gap-1 mt-0.5">
               <span className="text-sm text-gray-400">{mockUser.email}</span>
               <Shield size={13} className="text-green-500 shrink-0" />
             </div>
-            {/* Ward + assembly info */}
             <div className="mt-1.5 flex items-center justify-center gap-1.5">
               <span className="text-xs text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full font-medium">
                 Ward 3
@@ -132,19 +109,17 @@ export default function ProfileScreen() {
           </div>
         </div>
 
-        {/* Stats row */}
         <div className="flex gap-3">
           <StatCard label="Total" value={mockUser.stats.total} active />
           <StatCard label="Resolved" value={mockUser.stats.resolved} />
           <StatCard label="Pending" value={mockUser.stats.pending} />
         </div>
 
-        {/* Account settings */}
         <SettingsGroup label="Account Settings">
           <SettingsRow
             icon={Bell}
             label="Notifications"
-            onPress={() => {}}
+            onPress={() => navigate('/notifications')}
           />
           <SettingsRow
             icon={Lock}
@@ -153,7 +128,6 @@ export default function ProfileScreen() {
           />
         </SettingsGroup>
 
-        {/* Support & legal */}
         <SettingsGroup label="Support & Legal">
           <SettingsRow
             icon={HelpCircle}
@@ -170,7 +144,6 @@ export default function ProfileScreen() {
           />
         </SettingsGroup>
 
-        {/* App version footer */}
         <p className="text-center text-xs text-gray-400 pb-2">
           CitiFix v1.0.0 • Made for Ghana
         </p>

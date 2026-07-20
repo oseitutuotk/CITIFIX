@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Info, ChevronRight } from 'lucide-react'
+import { Info, ChevronRight, AlertCircle } from 'lucide-react'
 import BottomNav from '../../components/BottomNav.jsx'
 import { useReport } from '../../hooks/useReport.js'
 
@@ -8,6 +8,10 @@ function generateReferenceId() {
   const random = Math.floor(10000 + Math.random() * 90000)
   return `#CFX-${random}-ACCRA`
 }
+
+// For now isGuest is always false since we have a mock logged-in user.
+// During Supabase integration this will check the real auth state.
+const isGuest = true;
 
 // Animated checkmark drawn via SVG stroke-dashoffset animation.
 // The circle and the tick both draw in sequence for a satisfying
@@ -84,7 +88,7 @@ export default function SuccessScreen() {
 
   useEffect(() => {
     resetReport()
-  }, [])
+  }, [resetReport])
 
   return (
     <div className="flex flex-col h-full bg-gray-50 items-center justify-center px-6 pb-16">
@@ -117,7 +121,38 @@ export default function SuccessScreen() {
         </span>
       </div>
 
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-3">
+        {/* Guest warning — shown when user is not logged in */}
+        {isGuest && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 space-y-3">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">
+                  Report not linked to an account
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                  Without an account you won't receive status updates and may lose access to this report.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate('/register?from=report&link=true')}
+                className="flex-1 bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm tap-active"
+              >
+                Create Account
+              </button>
+              <button
+                onClick={() => navigate('/login?from=report&link=true')}
+                className="flex-1 border border-amber-300 text-amber-700 font-bold py-2.5 rounded-xl text-sm tap-active"
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => navigate('/my-reports')}
           className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 tap-active"
