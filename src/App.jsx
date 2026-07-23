@@ -20,37 +20,40 @@ import RegisterScreen from './pages/auth/RegisterScreen.jsx'
 
 // Report form state provider
 import { ReportProvider } from './context/ReportContext.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 export default function App() {
   return (
     <BrowserRouter>
       <div className="app-shell">
-        <ReportProvider>
-          <Routes>
-            {/* Splash */}
-            <Route path="/splash" element={<SplashScreen />} />
+        <AuthProvider>
+          <ReportProvider>
+            <Routes>
+              {/* Splash */}
+              <Route path="/splash" element={<SplashScreen />} />
 
-            {/* Main screens */}
-            <Route path="/" element={<HomeScreen />} />
-            {<Route path="/my-reports" element={<MyReportsScreen />} />}
-            {<Route path="/reports/:id" element={<ReportDetailScreen />} />}
-            {<Route path="/profile" element={<ProfileScreen />} />}
-            {<Route path="/notifications" element={<NotificationsScreen />} />}
+              {/* Main screens */}
+              <Route path="/" element={<HomeScreen />} />
+              {<Route path="/my-reports" element={<MyReportsScreen />} />}
+              {<Route path="/reports/:id" element={<ReportDetailScreen />} />}
+              {<Route path="/profile" element={<ProfileScreen />} />}
+              {<Route path="/notifications" element={<NotificationsScreen />} />}
 
-            {/* Report submission flow */}
-            {<Route path="/report/step1" element={<Step1Details />} />}
-            {<Route path="/report/step2" element={<Step2Location />} />}
-            {<Route path="/report/step3" element={<Step3Review />} />}
-            {<Route path="/report/success" element={<SuccessScreen />} />}
+              {/* Report submission flow */}
+              {<Route path="/report/step1" element={<Step1Details />} />}
+              {<Route path="/report/step2" element={<Step2Location />} />}
+              {<Route path="/report/step3" element={<Step3Review />} />}
+              {<Route path="/report/success" element={<SuccessScreen />} />}
 
-            {/* Auth (deferred) */}
-            {<Route path="/login" element={<LoginScreen />} /> }
-            {<Route path="/register" element={<RegisterScreen />} /> }
+              {/* Auth (deferred) */}
+              {<Route path="/login" element={<LoginScreen />} /> }
+              {<Route path="/register" element={<RegisterScreen />} /> }
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </ReportProvider>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ReportProvider>
+        </AuthProvider>
       </div>
     </BrowserRouter>
   )

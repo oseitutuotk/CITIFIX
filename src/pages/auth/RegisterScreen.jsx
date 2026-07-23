@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Zap } from 'lucide-react'
 import AppHeader from '../../components/AppHeader.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 
 export default function RegisterScreen() {
   const navigate = useNavigate()
@@ -18,8 +19,23 @@ export default function RegisterScreen() {
   const canSubmit = fullName.trim() && email.trim() && passwordsMatch && agreedToTerms
   const showMismatch = confirmPassword.length > 0 && password !== confirmPassword
 
-  function handleCreateAccount() {
+  const { signUp } = useAuth()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleCreateAccount() {
     if (!canSubmit) return
+    setError('')
+    setLoading(true)
+    const { error } = await signUp(email, password, fullName)
+    setLoading(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    // Supabase sends a confirmation email by default.
+    // Navigate home — user is signed in immediately on free plan
+    // unless email confirmation is enforced in dashboard settings.
     navigate('/', { replace: true })
   }
 
@@ -159,14 +175,18 @@ export default function RegisterScreen() {
             </p>
           </div>
 
+          {error && (
+            <p className="text-xs text-red-500 text-center -mt-1">{error}</p>
+          )}
+
           {/* Create account button */}
           <button
             onClick={handleCreateAccount}
-            disabled={!canSubmit}
+            disabled={!canSubmit || loading}
             className="w-full bg-blue-600 disabled:bg-gray-200 text-white disabled:text-gray-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors tap-active"
           >
             <ArrowRight size={18} />
-            Create Account
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
           {/* Sign in link */}
