@@ -10,7 +10,7 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import BottomNav from '../components/BottomNav.jsx'
-import mockUser from '../data/mockUser.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 function SettingsGroup({ label, children }) {
   return (
@@ -44,13 +44,9 @@ function SettingsRow({ icon: Icon, label, iconBg = 'bg-gray-100', iconColor = 't
 
 function StatCard({ label, value, active = false }) {
   return (
-    <div
-      className={`flex-1 rounded-2xl p-3 flex flex-col items-center gap-1 ${
-        active
-          ? 'bg-blue-50 border-2 border-blue-100'
-          : 'bg-white border border-gray-100'
-      }`}
-    >
+    <div className={`flex-1 rounded-2xl p-3 flex flex-col items-center gap-1 ${
+      active ? 'bg-blue-50 border-2 border-blue-100' : 'bg-white border border-gray-100'
+    }`}>
       <ClipboardList size={18} className={active ? 'text-blue-600' : 'text-gray-400'} />
       <span className={`text-xl font-bold ${active ? 'text-blue-700' : 'text-gray-800'}`}>
         {value}
@@ -64,23 +60,26 @@ function StatCard({ label, value, active = false }) {
 
 export default function ProfileScreen() {
   const navigate = useNavigate()
+  const { profile, signOut } = useAuth()
 
-  const initials = mockUser.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?'
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-
       <div className="bg-white h-14 flex items-center justify-center border-b border-gray-100">
         <span className="font-bold text-gray-900 text-base">Profile</span>
       </div>
 
       <div className="page-scroll px-4 pt-6 space-y-5">
 
+        {/* Avatar + name + location info */}
         <div className="flex flex-col items-center gap-2">
           <div className="relative">
             <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
@@ -92,27 +91,38 @@ export default function ProfileScreen() {
           </div>
 
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">{mockUser.full_name}</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              {profile?.full_name || 'Loading...'}
+            </h2>
             <div className="flex items-center justify-center gap-1 mt-0.5">
-              <span className="text-sm text-gray-400">{mockUser.email}</span>
+              <span className="text-sm text-gray-400">{profile?.email || ''}</span>
               <Shield size={13} className="text-green-500 shrink-0" />
             </div>
-            <div className="mt-1.5 flex items-center justify-center gap-1.5">
-              <span className="text-xs text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full font-medium">
-                Ward 3
-              </span>
-              <span className="text-xs text-gray-400">•</span>
-              <span className="text-xs text-gray-500 font-medium">
-                Okaikwei North Municipal Assembly
-              </span>
-            </div>
+            {(profile?.ward || profile?.assembly) && (
+              <div className="mt-1.5 flex items-center justify-center gap-1.5 flex-wrap">
+                {profile?.ward && (
+                  <span className="text-xs text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full font-medium">
+                    {profile.ward}
+                  </span>
+                )}
+                {profile?.ward && profile?.assembly && (
+                  <span className="text-xs text-gray-400">•</span>
+                )}
+                {profile?.assembly && (
+                  <span className="text-xs text-gray-500 font-medium">
+                    {profile.assembly}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Stats — will show real data once report fetching is wired up */}
         <div className="flex gap-3">
-          <StatCard label="Total" value={mockUser.stats.total} active />
-          <StatCard label="Resolved" value={mockUser.stats.resolved} />
-          <StatCard label="Pending" value={mockUser.stats.pending} />
+          <StatCard label="Total" value="—" active />
+          <StatCard label="Resolved" value="—" />
+          <StatCard label="Pending" value="—" />
         </div>
 
         <SettingsGroup label="Account Settings">
@@ -140,7 +150,7 @@ export default function ProfileScreen() {
             iconBg="bg-red-50"
             iconColor="text-red-500"
             labelColor="text-red-500"
-            onPress={() => navigate('/login')}
+            onPress={handleSignOut}
           />
         </SettingsGroup>
 

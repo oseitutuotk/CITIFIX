@@ -18,6 +18,17 @@ export function AuthProvider({ children }) {
 
     if (error) {
       console.error('Error fetching profile:', error.message)
+      // Fall back to auth metadata if profile fetch fails
+      const { data: userData } = await supabase.auth.getUser()
+      if (userData?.user) {
+        return {
+          id: userData.user.id,
+          full_name: userData.user.user_metadata?.full_name || '',
+          email: userData.user.email,
+          ward: null,
+          assembly: 'Okaikwei North Municipal Assembly',
+        }
+      }
       return null
     }
     return data

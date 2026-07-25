@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Bell, Zap } from 'lucide-react'
-import mockUser from '../data/mockUser.js'
+import { useAuth } from '../hooks/useAuth.js'
 
 export default function AppHeader({
   variant = 'inner',
@@ -9,6 +9,7 @@ export default function AppHeader({
   rightAction,
 }) {
   const navigate = useNavigate()
+  const { profile } = useAuth()
 
   function handleBack() {
     if (onBack) {
@@ -20,11 +21,9 @@ export default function AppHeader({
 
   // ── Home variant ─────────────────────────────────────────────────────────────
   if (variant === 'home') {
-    const initials = mockUser.full_name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
+    const initials = profile?.full_name
+      ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+      : '?'
 
     return (
       <header className="flex items-center justify-between px-4 h-14 bg-white border-b border-gray-100 shrink-0">
@@ -35,7 +34,6 @@ export default function AppHeader({
         <span className="font-bold text-gray-900 text-base">CitiFix</span>
 
         <div className="flex items-center gap-2">
-          {/* Bell — navigates to notifications */}
           <button
             onClick={() => navigate('/notifications')}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 relative tap-active"
@@ -44,7 +42,6 @@ export default function AppHeader({
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </button>
 
-          {/* Avatar — navigates to profile */}
           <button
             onClick={() => navigate('/profile')}
             className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center tap-active"

@@ -2,6 +2,12 @@
 @import "leaflet/dist/leaflet.css";
 
 /* ── Base mobile-first resets ── */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
 *,
 *::before,
 *::after {

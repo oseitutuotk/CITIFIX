@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Info, X } from 'lucide-react'
 import AppHeader from '../../components/AppHeader.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 
 export default function LoginScreen() {
   const navigate = useNavigate()
@@ -11,14 +12,26 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  const { signIn } = useAuth()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
   // Show the guest warning banner if user arrived from the report flow
   const fromReport = new URLSearchParams(location.search).get('from') === 'report'
   const [showGuestBanner, setShowGuestBanner] = useState(fromReport)
 
   const canSubmit = email.trim() && password.trim()
 
-  function handleSignIn() {
+  async function handleSignIn() {
     if (!canSubmit) return
+    setError('')
+    setLoading(true)
+    const { error } = await signIn(email, password)
+    setLoading(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
     navigate('/', { replace: true })
   }
 
@@ -123,14 +136,18 @@ export default function LoginScreen() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-xs text-red-500 text-center">{error}</p>
+          )}
+
           {/* Sign in button */}
           <button
             onClick={handleSignIn}
-            disabled={!canSubmit}
+            disabled={!canSubmit || loading}
             className="w-full bg-blue-600 disabled:bg-gray-200 text-white disabled:text-gray-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors tap-active"
           >
             <ArrowRight size={18} />
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
 
           {/* Register link */}

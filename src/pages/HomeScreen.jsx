@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock, ClipboardList } from 'lucide-react'
+import { Plus, Clock } from 'lucide-react'
 import AppHeader from '../components/AppHeader.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import ReportCard from '../components/ReportCard.jsx'
-import mockUser from '../data/mockUser.js'
+import { useAuth } from '../hooks/useAuth.js'
 import mockReports from '../data/mockReports.js'
 
 function getGreeting() {
@@ -13,13 +13,13 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function getFirstName(fullName) {
-  return fullName.split(' ')[0]
-}
-
 export default function HomeScreen() {
   const navigate = useNavigate()
+  const { profile } = useAuth()
 
+  const firstName = profile?.full_name?.split(' ')[0] || 'there'
+
+  // Still using mock reports until we wire up real report fetching
   const recentReports = mockReports.slice(0, 3)
   const hasReports = recentReports.length > 0
 
@@ -32,7 +32,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <div>
           <h1 className="text-xl font-bold text-gray-900">
-            {getGreeting()}, {getFirstName(mockUser.full_name)} 👋
+            {getGreeting()}, {firstName} 👋
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Let's make our neighbourhood better today.
@@ -58,30 +58,19 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row — will show real data once report fetching is wired up */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-3 border border-gray-100">
-            <div className="flex items-center gap-1.5 mb-1">
-              <ClipboardList size={13} className="text-blue-500" />
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                My Reports
-              </p>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {mockUser.stats.total}
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+              My Reports
             </p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
           </div>
-
           <div className="bg-white rounded-2xl p-3 border border-gray-100">
-            <div className="flex items-center gap-1.5 mb-1">
-              <ClipboardList size={13} className="text-green-500" />
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Resolved
-              </p>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {String(mockUser.stats.resolved).padStart(2, '0')}
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+              Resolved
             </p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
           </div>
         </div>
 
@@ -106,15 +95,12 @@ export default function HomeScreen() {
               ))}
             </div>
           ) : (
-            // Empty state — shown when user has no reports yet
             <div className="bg-white rounded-2xl border border-dashed border-gray-200 px-4 py-6 flex items-center gap-3">
               <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
                 <Plus size={20} className="text-gray-400" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-600">
-                  No reports yet
-                </p>
+                <p className="text-sm font-semibold text-gray-600">No reports yet</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Tap Report below to submit your first issue.
                 </p>

@@ -22,6 +22,9 @@ import StepIndicator from '../../components/StepIndicator.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { useReport } from '../../hooks/useReport.js'
 import mockReports from '../../data/mockReports.js'
+import { submitReport } from '../../services/reportService.js'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getDeviceId } from '../../lib/deviceId.js'
 
 function RoadsIcon({ size = 20 }) {
   return (
@@ -176,6 +179,10 @@ export default function Step3Review() {
   const navigate = useNavigate()
   const { reportData } = useReport()
 
+  const { user } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
   const [showDuplicate, setShowDuplicate] = useState(false)
   const [duplicateDetected, setDuplicateDetected] = useState(false)
 
@@ -189,18 +196,39 @@ export default function Step3Review() {
 
   const mapUrl = getStaticMapUrl(reportData.coords)
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    if (submitting) return
+
     if (duplicateDetected) {
       setShowDuplicate(true)
       return
     }
+
+    // 50/50 duplicate simulation — replace with real check during backend phase
     const isDuplicate = Math.random() < 0.5
     if (isDuplicate) {
       setDuplicateDetected(true)
       setShowDuplicate(true)
-    } else {
-      navigate('/report/success')
+      return
     }
+
+    setSubmitting(true)
+    setSubmitError('')
+
+    const { data, error } = await submitReport(
+      reportData,
+      user?.id || null,
+      getDeviceId()
+    )
+
+    setSubmitting(false)
+
+    if (error) {
+      setSubmitError(error.message || JSON.stringify(error))
+      return
+    }
+
+    navigate('/report/success')
   }
 
   return (
@@ -305,12 +333,25 @@ export default function Step3Review() {
 
       {/* Fixed bottom actions */}
       <div className="absolute bottom-16 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 space-y-2">
+        {submitError && (
+          <p className="text-xs text-red-500 text-center">{submitError}</p>
+        )}
         <button
           onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 tap-active"
+          disabled={submitting}
+          className="w-full bg-blue-600 disabled:bg-blue-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 tap-active"
         >
-          Submit Report
-          <Send size={16} />
+          {submitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            <>
+              Submit Report
+              <Send size={16} />
+            </>
+          )}
         </button>
 
         {/* More prominent Go Back — outlined button instead of plain text */}
