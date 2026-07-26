@@ -102,6 +102,17 @@ export async function submitReport(reportData, userId, deviceId) {
     }
   }
 
+  // Step 5 — Call the Edge Function to process with Gemini AI
+  const { data: fnData, error: fnError } = await supabase.functions.invoke('process-report', {
+    body: { report_id: reportId },
+  })
+
+  if (fnError) {
+    console.error('Edge Function error:', fnError)
+  } else {
+    console.log('Edge Function response:', fnData)
+  }
+
   return { data: report, error: null }
 }
 
