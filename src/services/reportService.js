@@ -178,3 +178,13 @@ export async function submitComment(reportId, userId, body) {
 
   return { data, error }
 }
+
+// ── Delete a report ───────────────────────────────────────────────────────────
+export async function deleteReport(reportId) {
+  const { error } = await supabase
+    .from('reports')
+    .delete()
+    .eq('id', reportId)
+
+  return { error }
+}

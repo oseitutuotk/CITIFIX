@@ -9,12 +9,12 @@ import {
   Eye,
   EyeOff,
   Send,
+  Share2,
   Droplets,
   Lightbulb,
   Trash2,
   Zap,
   TriangleAlert,
-  Share2,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -30,6 +30,8 @@ import {
   toggleReportVisibility,
   submitComment,
 } from '../services/reportService.js'
+import { deleteReport } from '../services/reportService.js'
+import { useReports } from '../context/ReportsContext.jsx'
 
 function RoadsIcon({ size = 16 }) {
   return (
@@ -257,6 +259,10 @@ export default function ReportDetailScreen() {
   const { id } = useParams()
   const { user } = useAuth()
 
+  const { invalidate, removeFromCache } = useReports()
+  const [showMenu, setShowMenu] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -314,6 +320,20 @@ export default function ReportDetailScreen() {
     } catch (_) {}
   }
 
+  async function handleDelete() {
+    if (!window.confirm('Are you sure you want to delete this report? This cannot be undone.')) return
+    setDeleting(true)
+    const { error } = await deleteReport(id)
+    if (error) {
+      alert('Failed to delete report. Please try again.')
+      setDeleting(false)
+      return
+    }
+    removeFromCache(id)
+    invalidate()
+    navigate('/my-reports', { replace: true })
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col h-full bg-gray-50">
@@ -354,12 +374,41 @@ export default function ReportDetailScreen() {
       <AppHeader
         title="Report Detail"
         rightAction={
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 tap-active"
-          >
-            <Share2 size={17} className="text-gray-600" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 tap-active"
+            >
+              <MoreHorizontal size={17} className="text-gray-600" />
+            </button>
+
+            {showMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowMenu(false)}
+                />
+                <div className="absolute right-0 top-11 z-50 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-44">
+                  <button
+                    onClick={() => { setShowMenu(false); handleShare() }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 font-medium tap-active hover:bg-gray-50"
+                  >
+                    <Share2 size={15} className="text-gray-500" />
+                    Share Report
+                  </button>
+                  <div className="h-px bg-gray-100" />
+                  <button
+                    onClick={() => { setShowMenu(false); handleDelete() }}
+                    disabled={deleting}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 font-medium tap-active hover:bg-red-50"
+                  >
+                    <Trash2 size={15} className="text-red-400" />
+                    {deleting ? 'Deleting...' : 'Delete Report'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         }
       />
 

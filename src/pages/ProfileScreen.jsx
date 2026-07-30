@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import BottomNav from '../components/BottomNav.jsx'
 import { useAuth } from '../hooks/useAuth.js'
+import { useReports } from '../context/ReportsContext.jsx'
+import { useEffect } from 'react'
 
 function SettingsGroup({ label, children }) {
   return (
@@ -61,6 +63,18 @@ function StatCard({ label, value, active = false }) {
 export default function ProfileScreen() {
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
+
+  const { reports, loaded, loadReports } = useReports()
+
+  useEffect(() => {
+    if (!loaded) loadReports()
+  }, [loaded, loadReports])
+
+  const totalReports = reports.length
+  const resolvedReports = reports.filter((r) => r.status === 'Resolved').length
+  const pendingReports = reports.filter((r) =>
+    ['Processing', 'Pending', 'Investigating', 'In Progress'].includes(r.status)
+  ).length
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -120,9 +134,9 @@ export default function ProfileScreen() {
 
         {/* Stats — will show real data once report fetching is wired up */}
         <div className="flex gap-3">
-          <StatCard label="Total" value="—" active />
-          <StatCard label="Resolved" value="—" />
-          <StatCard label="Pending" value="—" />
+          <StatCard label="Total" value={totalReports} active />
+          <StatCard label="Resolved" value={resolvedReports} />
+          <StatCard label="Pending" value={pendingReports} />
         </div>
 
         <SettingsGroup label="Account Settings">

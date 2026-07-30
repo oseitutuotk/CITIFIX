@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { Plus, Loader2, AlertCircle } from 'lucide-react'
 import BottomNav from '../components/BottomNav.jsx'
 import ReportCard from '../components/ReportCard.jsx'
-import { useAuth } from '../hooks/useAuth.js'
-import { fetchUserReports } from '../services/reportService.js'
+import { useReports, mapReport } from '../context/ReportsContext.jsx'
 
 const TABS = ['All', 'Active', 'Resolved']
 const ACTIVE_STATUSES = ['Processing', 'In Progress', 'Investigating', 'Pending']
@@ -15,46 +15,47 @@ function filterReports(reports, tab) {
   return reports
 }
 
-// Maps a real Supabase report row to the shape ReportCard expects
-function mapReport(report) {
-  return {
-    id: report.id,
-    category: report.category,
-    title: report.title || `${report.category} issue at ${report.location_name?.split(',')[0] || 'your area'}`,
-    status: report.status,
-    location_name: report.location_name || 'Unknown location',
-    display_date: new Date(report.created_at).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }),
-    photo_urls: report.report_photos?.map((p) => p.storage_url) || [],
-  }
+// Pull-to-refresh hook
+function usePullToRefresh(onRefresh) {
+  useEffect(() => {
+    let startY = 0
+    let isPulling = false
+
+    function onTouchStart(e) {
+      if (window.scrollY === 0) {
+        startY = e.touches[0].clientY
+        isPulling = true
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (!isPulling) return
+      const deltaY = e.changedTouches[0].clientY - startY
+      if (deltaY > 80) onRefresh()
+      isPulling = false
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [onRefresh])
 }
 
 export default function MyReportsScreen() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('All')
-  const [reports, setReports] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { reports, loading, refreshing, error, loaded, loadReports, refresh } = useReports()
 
+  // Load on first mount only
   useEffect(() => {
-    async function loadReports() {
-      if (!user?.id) return
-      setLoading(true)
-      setError(null)
-      const { data, error } = await fetchUserReports(user.id)
-      if (error) {
-        setError('Failed to load reports. Pull down to retry.')
-      } else {
-        setReports(data || [])
-      }
-      setLoading(false)
-    }
-    loadReports()
-  }, [user?.id])
+    if (!loaded) loadReports()
+  }, [loaded, loadReports])
+
+  usePullToRefresh(refresh)
 
   const mappedReports = reports.map(mapReport)
   const filtered = filterReports(mappedReports, activeTab)
@@ -66,6 +67,13 @@ export default function MyReportsScreen() {
       <div className="bg-white h-14 flex items-center justify-center border-b border-gray-100 shrink-0">
         <span className="font-bold text-gray-900 text-base">My Reports</span>
       </div>
+
+      {/* Pull to refresh indicator */}
+      {refreshing && (
+        <div className="bg-blue-50 text-blue-600 text-xs font-medium text-center py-1.5 shrink-0">
+          Refreshing...
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="bg-white px-4 py-3 border-b border-gray-100 shrink-0">
@@ -90,21 +98,19 @@ export default function MyReportsScreen() {
       <div className="page-scroll px-4 pt-3 space-y-3">
 
         {loading ? (
-          // Loading state
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 size={28} className="text-blue-600 animate-spin" />
             <p className="text-sm text-gray-400">Loading your reports...</p>
           </div>
 
         ) : error ? (
-          // Error state
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
             <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center">
               <AlertCircle size={24} className="text-red-400" />
             </div>
             <p className="text-sm font-semibold text-gray-600">{error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => loadReports()}
               className="text-sm text-blue-600 font-semibold tap-active"
             >
               Retry
@@ -113,7 +119,6 @@ export default function MyReportsScreen() {
 
         ) : (
           <>
-            {/* Count + sort row */}
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-gray-700">
                 History{' '}
@@ -122,7 +127,6 @@ export default function MyReportsScreen() {
               <span className="text-xs text-gray-400">Sort: Newest First</span>
             </div>
 
-            {/* Empty state */}
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">

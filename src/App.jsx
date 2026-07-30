@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth.js'
+import { ReportsProvider } from './context/ReportsContext.jsx'
 
 // Pages
 import SplashScreen from './pages/SplashScreen.jsx'
@@ -86,9 +87,11 @@ export default function App() {
     <BrowserRouter>
       <div className="app-shell">
         <AuthProvider>
-          <ReportProvider>
-            <AppRoutes />
-          </ReportProvider>
+          <ReportsProvider>
+            <ReportProvider>
+              <AppRoutes />
+            </ReportProvider>
+          </ReportsProvider>
         </AuthProvider>
       </div>
     </BrowserRouter>
