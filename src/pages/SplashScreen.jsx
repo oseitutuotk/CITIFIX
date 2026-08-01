@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Zap } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth.js'
 
 // SplashScreen — shown briefly on app launch.
 // Auto-navigates to Home after 5 seconds.
@@ -8,28 +9,24 @@ import { Zap } from 'lucide-react'
 
 export default function SplashScreen() {
   const navigate = useNavigate()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
+    if (loading) return
     const timer = setTimeout(() => {
-      navigate('/', { replace: true })
-    }, 5000)
-
-    // Clean up the timer if the component unmounts early
+      navigate(user ? '/' : '/login', { replace: true })
+    }, 2000)
     return () => clearTimeout(timer)
-  }, [navigate])
+  }, [user, loading, navigate])
 
   return (
     <div className="flex flex-col items-center justify-center h-full bg-blue-600">
-      {/* Logo mark */}
       <div className="flex flex-col items-center gap-4">
         <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg">
           <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-            {/* Replace Zap with real logo image when ready */}
             <Zap size={26} className="text-white" />
           </div>
         </div>
-
-        {/* App name */}
         <span className="text-white text-3xl font-bold tracking-tight">
           CitiFix
         </span>

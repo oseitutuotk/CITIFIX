@@ -77,7 +77,7 @@ function AppRoutes() {
       <Route path="/report/success" element={<ProtectedRoute><SuccessScreen /></ProtectedRoute>} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/splash" replace />} />
     </Routes>
   )
 }
