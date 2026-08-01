@@ -66,28 +66,42 @@ Return ONLY a valid JSON object. No markdown, no backticks, no explanation.`
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     console.log('Calling Gemini API...')
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 2048,
-          },
-        }),
-      }
-    )
+    // Retry Gemini up to 3 times with increasing delays
+    let geminiData = null
+    let lastError = ''
 
-    if (!geminiResponse.ok) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+          }),
+        }
+      )
+
+      if (geminiResponse.ok) {
+        geminiData = await geminiResponse.json()
+        break
+      }
+
       const errText = await geminiResponse.text()
-      console.error('Gemini API error:', geminiResponse.status, errText)
-      throw new Error('Gemini API error: ' + geminiResponse.status)
+      lastError = `${geminiResponse.status}: ${errText}`
+      console.error(`Gemini attempt ${attempt} failed:`, lastError)
+
+      if (attempt < 3) {
+        // Wait before retrying: 2s, then 4s
+        await new Promise((r) => setTimeout(r, attempt * 2000))
+      }
     }
 
-    const geminiData = await geminiResponse.json()
+    if (!geminiData) {
+      throw new Error(`Gemini failed after 3 attempts: ${lastError}`)
+    }
+
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
 
     console.log('Gemini raw response:', rawText)
