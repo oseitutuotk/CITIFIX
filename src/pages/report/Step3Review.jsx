@@ -25,6 +25,8 @@ import mockReports from '../../data/mockReports.js'
 import { submitReport } from '../../services/reportService.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getDeviceId } from '../../lib/deviceId.js'
+import { useReports } from '../../context/ReportsContext.jsx'
+import { AlertCircle, Loader2 } from 'lucide-react'
 
 function RoadsIcon({ size = 20 }) {
   return (
@@ -163,9 +165,10 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
             <button
               type="button"
               onClick={onSubmitAnyway}
-              className="w-full border-2 border-gray-200 text-gray-800 font-bold py-3.5 rounded-2xl tap-active"
+              disabled={submitting}
+              className="w-full border-2 border-gray-200 text-gray-800 font-bold py-3.5 rounded-2xl tap-active disabled:opacity-50"
             >
-              Submit Anyway
+              {submitting ? 'Submitting...' : 'Submit Anyway'}
             </button>
           </div>
         </div>
@@ -180,9 +183,11 @@ export default function Step3Review() {
   const { reportData } = useReport()
 
   const { user } = useAuth()
+  const { invalidate } = useReports()
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
-
+  const [showGeofenceWarning, setShowGeofenceWarning] = useState(false)
+  const [geofenceAcknowledged, setGeofenceAcknowledged] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
   const [duplicateDetected, setDuplicateDetected] = useState(false)
 
@@ -196,39 +201,61 @@ export default function Step3Review() {
 
   const mapUrl = getStaticMapUrl(reportData.coords)
 
+
+  const OKAIKWEI_BOUNDS = {
+    minLat: 5.5400, maxLat: 5.6200,
+    minLng: -0.2600, maxLng: -0.1800,
+  }
+
+  function isInServiceArea(lat, lng) {
+    if (!lat || !lng) return true
+    return (
+      lat >= OKAIKWEI_BOUNDS.minLat && lat <= OKAIKWEI_BOUNDS.maxLat &&
+      lng >= OKAIKWEI_BOUNDS.minLng && lng <= OKAIKWEI_BOUNDS.maxLng
+    )
+  }
+
+  async function doSubmit() {
+    setSubmitting(true)
+    setSubmitError('')
+    const inArea = isInServiceArea(reportData.coords?.lat, reportData.coords?.lng)
+    const { error } = await submitReport(
+      {
+        ...reportData,
+        is_in_service_area: inArea,
+        constituency: inArea ? 'Okaikwei North' : 'Outside Service Area',
+      },
+      user?.id || null,
+      getDeviceId()
+    )
+    setSubmitting(false)
+    if (error) {
+      setSubmitError('Failed to submit report. Please try again.')
+      return false
+    }
+    invalidate()
+    return true
+  }
+
   async function handleSubmit() {
     if (submitting) return
-
+    const inArea = isInServiceArea(reportData.coords?.lat, reportData.coords?.lng)
+    if (!inArea && !geofenceAcknowledged) {
+      setShowGeofenceWarning(true)
+      return
+    }
     if (duplicateDetected) {
       setShowDuplicate(true)
       return
     }
-
-    // 50/50 duplicate simulation — replace with real check during backend phase
     const isDuplicate = Math.random() < 0.5
     if (isDuplicate) {
       setDuplicateDetected(true)
       setShowDuplicate(true)
       return
     }
-
-    setSubmitting(true)
-    setSubmitError('')
-
-    const { data, error } = await submitReport(
-      reportData,
-      user?.id || null,
-      getDeviceId()
-    )
-
-    setSubmitting(false)
-
-    if (error) {
-      setSubmitError(error.message || JSON.stringify(error))
-      return
-    }
-
-    navigate('/report/success')
+    const success = await doSubmit()
+    if (success) navigate('/report/success')
   }
 
   return (
@@ -238,6 +265,40 @@ export default function Step3Review() {
       <div className="page-scroll px-4 pt-4 space-y-4">
 
         <StepIndicator current={3} />
+
+        {showGeofenceWarning && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 space-y-3">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">Outside Service Area</p>
+                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                  Your location appears to be outside the Okaikwei North Municipal Assembly area.
+                  Your report will still be submitted but may not be actioned by the assembly.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowGeofenceWarning(false); navigate('/report/step2') }}
+                className="flex-1 border border-amber-300 text-amber-700 font-semibold py-2.5 rounded-xl text-sm tap-active"
+              >
+                Fix Location
+              </button>
+              <button
+                onClick={async () => {
+                  setShowGeofenceWarning(false)
+                  setGeofenceAcknowledged(true)
+                  const success = await doSubmit()
+                  if (success) navigate('/report/success')
+                }}
+                className="flex-1 bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm tap-active"
+              >
+                Submit Anyway
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <h2 className="text-lg font-bold text-gray-900">One last check!</h2>
@@ -342,15 +403,9 @@ export default function Step3Review() {
           className="w-full bg-blue-600 disabled:bg-blue-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 tap-active"
         >
           {submitting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Submitting...
-            </>
+            <><Loader2 size={16} className="animate-spin" /> Submitting...</>
           ) : (
-            <>
-              Submit Report
-              <Send size={16} />
-            </>
+            <>Submit Report <Send size={16} /></>
           )}
         </button>
 
@@ -374,10 +429,14 @@ export default function Step3Review() {
         <DuplicateOverlay
           reportData={reportData}
           onDismiss={() => setShowDuplicate(false)}
-          onSubmitAnyway={() => {
-            setShowDuplicate(false)
-            navigate('/report/success')
+          onSubmitAnyway={async () => {
+            const success = await doSubmit()
+            if (success) {
+              setShowDuplicate(false)
+              navigate('/report/success')
+            }
           }}
+          submitting={submitting}
         />
       )}
     </div>
