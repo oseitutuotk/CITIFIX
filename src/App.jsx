@@ -4,6 +4,7 @@ import { ReportsProvider } from './context/ReportsContext.jsx'
 
 // Pages
 import SplashScreen from './pages/SplashScreen.jsx'
+import WelcomeScreen from './pages/auth/WelcomeScreen.jsx'
 import HomeScreen from './pages/HomeScreen.jsx'
 import MyReportsScreen from './pages/MyReportsScreen.jsx'
 import ReportDetailScreen from './pages/ReportDetailScreen.jsx'
@@ -35,6 +36,13 @@ function LoadingScreen() {
   )
 }
 
+// ── Guest-allowed route — shows content while auth is loading, without blocking guests ─────
+function GuestAllowedRoute({ children }) {
+  const { loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  return children
+}
+
 // ── Protected route — redirects to /login if not authenticated ────────────────
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -64,17 +72,20 @@ function AppRoutes() {
       {/* Auth screens — redirect to home if already logged in */}
       <Route path="/login" element={<AuthRoute><LoginScreen /></AuthRoute>} />
       <Route path="/register" element={<AuthRoute><RegisterScreen /></AuthRoute>} />
+      <Route path="/welcome" element={<AuthRoute><WelcomeScreen /></AuthRoute>} />
+
+      {/* Guest-accessible screens */}
+      <Route path="/" element={<GuestAllowedRoute><HomeScreen /></GuestAllowedRoute>} />
+      <Route path="/my-reports" element={<GuestAllowedRoute><MyReportsScreen /></GuestAllowedRoute>} />
+      <Route path="/report/step1" element={<GuestAllowedRoute><Step1Details /></GuestAllowedRoute>} />
+      <Route path="/report/step2" element={<GuestAllowedRoute><Step2Location /></GuestAllowedRoute>} />
+      <Route path="/report/step3" element={<GuestAllowedRoute><Step3Review /></GuestAllowedRoute>} />
+      <Route path="/report/success" element={<GuestAllowedRoute><SuccessScreen /></GuestAllowedRoute>} />
 
       {/* Protected screens — redirect to login if not authenticated */}
-      <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-      <Route path="/my-reports" element={<ProtectedRoute><MyReportsScreen /></ProtectedRoute>} />
       <Route path="/reports/:id" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-      <Route path="/report/step1" element={<ProtectedRoute><Step1Details /></ProtectedRoute>} />
-      <Route path="/report/step2" element={<ProtectedRoute><Step2Location /></ProtectedRoute>} />
-      <Route path="/report/step3" element={<ProtectedRoute><Step3Review /></ProtectedRoute>} />
-      <Route path="/report/success" element={<ProtectedRoute><SuccessScreen /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/splash" replace />} />
