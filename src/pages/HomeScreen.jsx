@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock } from 'lucide-react'
+import { Plus, Clock, ChevronRight } from 'lucide-react'
 import AppHeader from '../components/AppHeader.jsx'
 import BottomNav from '../components/BottomNav.jsx'
 import ReportCard from '../components/ReportCard.jsx'
@@ -47,15 +47,16 @@ function usePullToRefresh(onRefresh) {
 
 export default function HomeScreen() {
   const navigate = useNavigate()
-  const { profile } = useAuth()
+  const { profile, isGuest } = useAuth()
   const { reports, loading, refreshing, loaded, loadReports, refresh } = useReports()
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'there'
+  const firstName = isGuest ? null : (profile?.full_name?.split(' ')[0] || 'there')
 
   // Load reports on first mount only — cache handles subsequent visits
   useEffect(() => {
+    if (isGuest) return
     if (!loaded) loadReports()
-  }, [loaded, loadReports])
+  }, [loaded, loadReports, isGuest])
 
   usePullToRefresh(refresh)
 
@@ -82,12 +83,28 @@ export default function HomeScreen() {
           {/* Greeting */}
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              {getGreeting()}, {firstName} 👋
+              {isGuest ? 'Welcome to CitiFix 👋' : `${getGreeting()}, ${firstName} 👋`}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Let's make our neighbourhood better today.
+              {isGuest
+                ? 'Report issues in your community — no account needed.'
+                : "Let's make our neighbourhood better today."}
             </p>
           </div>
+
+          {/* Guest Banner */}
+          {isGuest && (
+            <div
+              onClick={() => navigate('/welcome')}
+              className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3 flex items-center justify-between tap-active cursor-pointer"
+            >
+              <div>
+                <p className="text-sm font-semibold text-blue-800">You're browsing as a guest</p>
+                <p className="text-xs text-blue-600 mt-0.5">Sign in to track your reports and get updates</p>
+              </div>
+              <ChevronRight size={16} className="text-blue-400 shrink-0" />
+            </div>
+          )}
 
           {/* Report an Issue CTA card */}
           <div
