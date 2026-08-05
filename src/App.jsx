@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth.js'
 import { ReportsProvider } from './context/ReportsContext.jsx'
@@ -93,10 +94,34 @@ function AppRoutes() {
   )
 }
 
+function InstallBanner() {
+  const [showBanner, setShowBanner] = useState(false)
+
+  useEffect(() => {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+
+    if (isIOS && !isStandalone) {
+      setShowBanner(true)
+    }
+  }, [])
+
+  if (!showBanner) return null
+
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 bg-blue-600 text-white text-center px-4 py-3 shadow-lg">
+      <p className="text-sm font-medium">
+        Install CitiFix on iOS for a faster experience.
+      </p>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <div className="app-shell">
+        <InstallBanner />
         <AuthProvider>
           <ReportsProvider>
             <ReportProvider>
