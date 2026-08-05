@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -12,7 +13,6 @@ import {
 import BottomNav from '../components/BottomNav.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 import { useReports } from '../context/ReportsContext.jsx'
-import { useEffect } from 'react'
 
 function SettingsGroup({ label, children }) {
   return (
@@ -61,6 +61,7 @@ function StatCard({ label, value, active = false }) {
 }
 
 export default function ProfileScreen() {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
 
@@ -82,7 +83,7 @@ export default function ProfileScreen() {
 
   async function handleSignOut() {
     await signOut()
-    navigate('/login', { replace: true })
+    navigate('/welcome', { replace: true })
   }
 
   return (
@@ -158,14 +159,36 @@ export default function ProfileScreen() {
             label="Help & Support"
             onPress={() => {}}
           />
-          <SettingsRow
-            icon={LogOut}
-            label="Log Out"
-            iconBg="bg-red-50"
-            iconColor="text-red-500"
-            labelColor="text-red-500"
-            onPress={handleSignOut}
-          />
+          {showLogoutConfirm ? (
+            <div className="px-4 py-3 space-y-2">
+              <p className="text-sm font-semibold text-gray-700 text-center">
+                Are you sure you want to log out?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-sm tap-active"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm tap-active"
+                >
+                  Log Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <SettingsRow
+              icon={LogOut}
+              label="Log Out"
+              iconBg="bg-red-50"
+              iconColor="text-red-500"
+              labelColor="text-red-500"
+              onPress={() => setShowLogoutConfirm(true)}
+            />
+          )}
         </SettingsGroup>
 
         <p className="text-center text-xs text-gray-400 pb-2">
