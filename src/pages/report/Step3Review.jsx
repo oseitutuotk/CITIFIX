@@ -259,10 +259,10 @@ export default function Step3Review() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 relative">
+    <div className="flex flex-col h-full bg-gray-50">
       <AppHeader title="Review Your Report" onBack={() => navigate('/report/step2')} />
 
-      <div className="page-scroll px-4 pt-4 space-y-4">
+      <div className="page-scroll px-4 pt-4 pb-36 space-y-4">
 
         <StepIndicator current={3} />
 
@@ -393,7 +393,7 @@ export default function Step3Review() {
       </div>
 
       {/* Fixed bottom actions */}
-      <div className="absolute bottom-16 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 space-y-2">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 space-y-2">
         {submitError && (
           <p className="text-xs text-red-500 text-center">{submitError}</p>
         )}
