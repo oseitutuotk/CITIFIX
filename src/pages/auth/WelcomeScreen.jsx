@@ -45,7 +45,7 @@ export default function WelcomeScreen() {
         </button>
 
         <button
-          onClick={() => navigate('/', { state: { guest: true } })}
+          onClick={() => navigate('/guest')}
           className="w-full text-gray-500 font-semibold py-3 tap-active"
         >
           Continue as Guest

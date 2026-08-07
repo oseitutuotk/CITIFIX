@@ -8,6 +8,10 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [guestMode, setGuestMode] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.sessionStorage.getItem('guestMode') === 'true'
+  })
 
   async function fetchProfile(userId) {
     const { data, error } = await supabase
@@ -70,13 +74,30 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  function enterGuestMode() {
+    setGuestMode(true)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('guestMode', 'true')
+    }
+  }
+
+  function clearGuestMode() {
+    setGuestMode(false)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('guestMode')
+    }
+  }
+
   async function signUp(email, password, fullName) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     })
-    if (!error && data?.user) await linkGuestReports(data.user.id)
+    if (!error && data?.user) {
+      await linkGuestReports(data.user.id)
+      clearGuestMode()
+    }
     return { data, error }
   }
 
@@ -85,7 +106,10 @@ export function AuthProvider({ children }) {
       email,
       password,
     })
-    if (!error && data?.user) await linkGuestReports(data.user.id)
+    if (!error && data?.user) {
+      await linkGuestReports(data.user.id)
+      clearGuestMode()
+    }
     return { data, error }
   }
 
@@ -113,7 +137,10 @@ export function AuthProvider({ children }) {
         user,
         profile,
         loading,
+        guestMode,
         isGuest: !user,
+        enterGuestMode,
+        clearGuestMode,
         signUp,
         signIn,
         signOut,

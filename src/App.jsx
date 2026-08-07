@@ -5,6 +5,7 @@ import { ReportsProvider } from './context/ReportsContext.jsx'
 // Pages
 import SplashScreen from './pages/SplashScreen.jsx'
 import WelcomeScreen from './pages/auth/WelcomeScreen.jsx'
+import GuestEntryScreen from './pages/auth/GuestEntryScreen.jsx'
 import HomeScreen from './pages/HomeScreen.jsx'
 import MyReportsScreen from './pages/MyReportsScreen.jsx'
 import ReportDetailScreen from './pages/ReportDetailScreen.jsx'
@@ -38,8 +39,9 @@ function LoadingScreen() {
 
 // ── Guest-allowed route — shows content while auth is loading, without blocking guests ─────
 function GuestAllowedRoute({ children }) {
-  const { loading } = useAuth()
+  const { loading, user, guestMode } = useAuth()
   if (loading) return <LoadingScreen />
+  if (!user && !guestMode) return <Navigate to="/welcome" replace />
   return children
 }
 
@@ -59,6 +61,14 @@ function AuthRoute({ children }) {
   return children
 }
 
+function GuestEntryRoute({ children }) {
+  const { loading, user, guestMode } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (user) return <Navigate to="/" replace />
+  if (guestMode) return <Navigate to="/" replace />
+  return children
+}
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
@@ -73,6 +83,7 @@ function AppRoutes() {
       <Route path="/login" element={<AuthRoute><LoginScreen /></AuthRoute>} />
       <Route path="/register" element={<AuthRoute><RegisterScreen /></AuthRoute>} />
       <Route path="/welcome" element={<AuthRoute><WelcomeScreen /></AuthRoute>} />
+      <Route path="/guest" element={<GuestEntryRoute><GuestEntryScreen /></GuestEntryRoute>} />
 
       {/* Guest-accessible screens */}
       <Route path="/" element={<GuestAllowedRoute><HomeScreen /></GuestAllowedRoute>} />
