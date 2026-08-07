@@ -31,7 +31,7 @@ export function ReportsProvider({ children }) {
   const { user } = useAuth()
 
   const [reports, setReports] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [loaded, setLoaded] = useState(false)

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus, Loader2, AlertCircle } from 'lucide-react'
 import BottomNav from '../components/BottomNav.jsx'
 import ReportCard from '../components/ReportCard.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 import { useReports, mapReport } from '../context/ReportsContext.jsx'
 
 const TABS = ['All', 'Active', 'Resolved']
@@ -48,12 +49,14 @@ function usePullToRefresh(onRefresh) {
 export default function MyReportsScreen() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('All')
+  const { isGuest } = useAuth()
   const { reports, loading, refreshing, error, loaded, loadReports, refresh } = useReports()
 
   // Load on first mount only
   useEffect(() => {
+    if (isGuest) return
     if (!loaded) loadReports()
-  }, [loaded, loadReports])
+  }, [loaded, loadReports, isGuest])
 
   usePullToRefresh(refresh)
 
