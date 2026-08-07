@@ -65,6 +65,7 @@ export default function HomeScreen() {
   const hasReports = recentReports.length > 0
   const totalReports = reports.length
   const resolvedReports = reports.filter((r) => r.status === 'Resolved').length
+  const showLocalLoading = loading && !isGuest
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -159,7 +160,7 @@ export default function HomeScreen() {
               )}
             </div>
 
-            {loading ? (
+            {showLocalLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="bg-white rounded-2xl border border-gray-100 h-20 animate-pulse" />
