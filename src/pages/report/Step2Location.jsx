@@ -188,7 +188,7 @@ export default function Step2Location() {
       </div>
 
       {/* Bottom panel — tightened spacing to avoid scroll */}
-      <div className="bg-white px-4 pt-2.5 pb-2 space-y-2 shrink-0 mb-16">
+      <div className="bg-white px-4 pt-2.5 pb-2 space-y-2 shrink-0">
 
         {/* EXIF GPS notice — dismissible, shown when photo location was used */}
         {showExifNotice && (
