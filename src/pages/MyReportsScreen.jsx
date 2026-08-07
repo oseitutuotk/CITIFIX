@@ -136,7 +136,7 @@ export default function MyReportsScreen() {
                   <Plus size={24} className="text-gray-400" />
                 </div>
                 <p className="text-sm font-semibold text-gray-500">
-                  No {activeTab.toLowerCase()} reports
+                  {activeTab === 'All' ? 'No reports' : `No ${activeTab.toLowerCase()} reports`}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
                   Tap the + button to submit a new report.
