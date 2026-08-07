@@ -11,6 +11,7 @@ import {
   Zap,
   MoreHorizontal,
   MapPin,
+  Route,
 } from 'lucide-react'
 import AppHeader from '../../components/AppHeader.jsx'
 import BottomNav from '../../components/BottomNav.jsx'
@@ -18,26 +19,8 @@ import StepIndicator from '../../components/StepIndicator.jsx'
 import { useReport } from '../../hooks/useReport.js'
 import { useExifGps } from '../../hooks/useExifGps.js'
 
-function RoadsIcon({ size = 22 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 17h18M3 12h18M9 7h6" />
-      <path d="M5 17l-2 5M19 17l2 5M5 7l-2-5M19 7l2-5" />
-    </svg>
-  )
-}
-
 const CATEGORIES = [
-  { id: 'roads',        label: 'Roads',        icon: RoadsIcon     },
+  { id: 'roads',        label: 'Roads',        icon: Route         },
   { id: 'drainage',     label: 'Drainage',     icon: Droplets      },
   { id: 'streetlights', label: 'Streetlights', icon: Lightbulb     },
   { id: 'waste',        label: 'Waste',        icon: Trash2        },
