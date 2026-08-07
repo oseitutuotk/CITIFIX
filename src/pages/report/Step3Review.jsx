@@ -21,12 +21,12 @@ import BottomNav from '../../components/BottomNav.jsx'
 import StepIndicator from '../../components/StepIndicator.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { useReport } from '../../hooks/useReport.js'
-import mockReports from '../../data/mockReports.js'
 import { submitReport } from '../../services/reportService.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getDeviceId } from '../../lib/deviceId.js'
 import { useReports } from '../../context/ReportsContext.jsx'
 import { AlertCircle, Loader2 } from 'lucide-react'
+import { checkDuplicateReport } from '../../services/reportService.js'
 
 function RoadsIcon({ size = 20 }) {
   return (
@@ -56,7 +56,7 @@ function getStaticMapUrl(coords) {
 }
 
 // ── Duplicate overlay ──────────────────────────────────────────────────────────
-function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
+function DuplicateOverlay({ reportData, similarReport, onDismiss, onSubmitAnyway, submitting }) {
   const navigate = useNavigate()
   const sheetRef = useRef(null)
 
@@ -64,9 +64,7 @@ function DuplicateOverlay({ reportData, onDismiss, onSubmitAnyway }) {
   const [dragY, setDragY] = useState(0)
   const DISMISS_THRESHOLD = 100
 
-  const similarReport =
-    mockReports.find((r) => r.category === reportData.category) ||
-    mockReports[0]
+  if (!similarReport) return null
 
   function handleViewExisting() {
     navigate(`/reports/${similarReport.id}`)
@@ -190,6 +188,7 @@ export default function Step3Review() {
   const [geofenceAcknowledged, setGeofenceAcknowledged] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
   const [duplicateDetected, setDuplicateDetected] = useState(false)
+  const [similarReport, setSimilarReport] = useState(null)
 
   const categoryInfo = CATEGORY_INFO[reportData.category] || CATEGORY_INFO.other
   const CategoryIcon = categoryInfo.icon
@@ -213,6 +212,19 @@ export default function Step3Review() {
       lat >= OKAIKWEI_BOUNDS.minLat && lat <= OKAIKWEI_BOUNDS.maxLat &&
       lng >= OKAIKWEI_BOUNDS.minLng && lng <= OKAIKWEI_BOUNDS.maxLng
     )
+  }
+
+  function formatDuplicate(duplicate) {
+    return {
+      id: duplicate.id,
+      title: duplicate.title || `${reportData.category} issue`,
+      status: duplicate.status,
+      location_name: duplicate.location_name,
+      display_date: new Date(duplicate.created_at).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }),
+      photo_urls: duplicate.photo_urls || [],
+    }
   }
 
   async function doSubmit() {
@@ -248,12 +260,20 @@ export default function Step3Review() {
       setShowDuplicate(true)
       return
     }
-    const isDuplicate = Math.random() < 0.5
-    if (isDuplicate) {
+
+    const { data: duplicate } = await checkDuplicateReport(
+      reportData.category,
+      reportData.coords?.lat,
+      reportData.coords?.lng
+    )
+
+    if (duplicate) {
+      setSimilarReport(formatDuplicate(duplicate))
       setDuplicateDetected(true)
       setShowDuplicate(true)
       return
     }
+
     const success = await doSubmit()
     if (success) navigate('/report/success')
   }
@@ -289,6 +309,22 @@ export default function Step3Review() {
                 onClick={async () => {
                   setShowGeofenceWarning(false)
                   setGeofenceAcknowledged(true)
+
+                  if (!duplicateDetected) {
+                    const { data: duplicate } = await checkDuplicateReport(
+                      reportData.category,
+                      reportData.coords?.lat,
+                      reportData.coords?.lng
+                    )
+
+                    if (duplicate) {
+                      setSimilarReport(formatDuplicate(duplicate))
+                      setDuplicateDetected(true)
+                      setShowDuplicate(true)
+                      return
+                    }
+                  }
+
                   const success = await doSubmit()
                   if (success) navigate('/report/success')
                 }}
@@ -428,6 +464,7 @@ export default function Step3Review() {
       {showDuplicate && (
         <DuplicateOverlay
           reportData={reportData}
+          similarReport={similarReport}
           onDismiss={() => setShowDuplicate(false)}
           onSubmitAnyway={async () => {
             const success = await doSubmit()

@@ -188,3 +188,46 @@ export async function deleteReport(reportId) {
 
   return { error }
 }
+
+// ── Check for nearby duplicate reports ────────────────────────────────────────
+// Fetches reports of the same category within a rough bounding box,
+// then applies precise Haversine distance check in JS.
+export async function checkDuplicateReport(category, lat, lng, radiusMetres = 50) {
+  if (!lat || !lng) return { data: null, error: null }
+
+  // Rough bounding box — 0.001 degrees ≈ 111 metres
+  const delta = (radiusMetres / 111000) * 1.5
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, title, status, location_name, created_at, coords_lat, coords_lng')
+    .eq('category', category)
+    .not('status', 'in', '("Rejected","Resolved")')
+    .gte('coords_lat', lat - delta)
+    .lte('coords_lat', lat + delta)
+    .gte('coords_lng', lng - delta)
+    .lte('coords_lng', lng + delta)
+    .order('created_at', { ascending: false })
+
+  if (error) return { data: null, error }
+
+  // Apply precise Haversine distance filter
+  function getDistanceMetres(lat1, lng1, lat2, lng2) {
+    const R = 6371000
+    const dLat = ((lat2 - lat1) * Math.PI) / 180
+    const dLng = ((lng2 - lng1) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2)
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  }
+
+  const nearby = (data || []).find((r) => {
+    if (!r.coords_lat || !r.coords_lng) return false
+    return getDistanceMetres(lat, lng, r.coords_lat, r.coords_lng) <= radiusMetres
+  })
+
+  return { data: nearby || null, error: null }
+}
