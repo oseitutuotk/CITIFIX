@@ -53,7 +53,7 @@ Analyse this citizen report text and any attached images to evaluate the issue a
 - ai_priority: Urgent rating from 1 (lowest priority) to 5 (critical/life-threatening safety hazard) (integer)
 - ai_tags: Array of 3-5 short descriptive tags
 - ai_department: Most relevant department (e.g. "Roads & Transport Department", "Water & Sanitation Department", "Electrical Department", "Waste Management Department")
-- moderation_flag: true if inappropriate content, false otherwise
+- moderation_flag: true if the report contains spam, offensive language, abusive text, or non-civic content; false otherwise (boolean)
 
 Evaluation Rules:
 1. Cross-reference visual details from any attached image(s) with the text description to confirm severity and details.
