@@ -43,8 +43,40 @@ Deno.serve(async (req) => {
 
     console.log('Processing report:', report_id, 'category:', report.category)
 
+    // Fetch photos for this report, limit to 2 for Gemini vision
+    const { data: photos } = await supabase
+      .from('report_photos')
+      .select('storage_url')
+      .eq('report_id', report_id)
+      .limit(2)
+
+    // Download and convert photos to base64 for Gemini vision
+    const imageParts = []
+    if (photos && photos.length > 0) {
+      for (const photo of photos) {
+        try {
+          const imgResponse = await fetch(photo.storage_url)
+          if (imgResponse.ok) {
+            const arrayBuffer = await imgResponse.arrayBuffer()
+            const base64 = btoa(
+              String.fromCharCode(...new Uint8Array(arrayBuffer))
+            )
+            const mimeType = imgResponse.headers.get('content-type') || 'image/jpeg'
+            imageParts.push({
+              inline_data: { mime_type: mimeType, data: base64 }
+            })
+          }
+        } catch (err) {
+          console.error('Photo fetch error:', err)
+        }
+      }
+    }
+
+    const hasPhotos = imageParts.length > 0
+
     // Build Gemini prompt
     const prompt = `You are an AI assistant for CitiFix, a municipal issue reporting system in Ghana.
+${hasPhotos ? 'Analyse the provided photo(s) alongside the report details below.' : ''}
 Analyse this citizen report text and any attached images to evaluate the issue accurately and return a JSON object with these exact fields:
 - title: A short clear title (max 10 words)
 - ai_summary: A single concise sentence summary for assembly staff (max 20 words)
@@ -81,7 +113,7 @@ Return ONLY a valid JSON object. No markdown, no backticks, no explanation.`
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: [{ parts: [...imageParts, { text: prompt }] }],
             generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
           }),
         }
