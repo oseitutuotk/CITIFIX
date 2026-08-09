@@ -4,15 +4,12 @@ import { Info, ChevronRight, AlertCircle } from 'lucide-react'
 import BottomNav from '../../components/BottomNav.jsx'
 import { useReport } from '../../hooks/useReport.js'
 import { useReports } from '../../context/ReportsContext.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 
 function generateReferenceId() {
   const random = Math.floor(10000 + Math.random() * 90000)
   return `#CFX-${random}-ACCRA`
 }
-
-// For now isGuest is always false since we have a mock logged-in user.
-// During Supabase integration this will check the real auth state.
-const isGuest = false;
 
 // Animated checkmark drawn via SVG stroke-dashoffset animation.
 // The circle and the tick both draw in sequence for a satisfying
@@ -85,9 +82,9 @@ function AnimatedCheckmark() {
 export default function SuccessScreen() {
   const navigate = useNavigate()
   const { resetReport } = useReport()
-
+  const { isGuest } = useAuth()
   const { invalidate } = useReports()
-  
+
   const [referenceId] = useState(generateReferenceId)
 
   useEffect(() => {
