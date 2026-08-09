@@ -189,6 +189,7 @@ export default function Step3Review() {
   const [showDuplicate, setShowDuplicate] = useState(false)
   const [duplicateDetected, setDuplicateDetected] = useState(false)
   const [similarReport, setSimilarReport] = useState(null)
+  const isSubmittingRef = useRef(false)
 
   const categoryInfo = CATEGORY_INFO[reportData.category] || CATEGORY_INFO.other
   const CategoryIcon = categoryInfo.icon
@@ -228,6 +229,9 @@ export default function Step3Review() {
   }
 
   async function doSubmit() {
+    if (isSubmittingRef.current) return false
+    isSubmittingRef.current = true
+
     setSubmitting(true)
     setSubmitError('')
     const inArea = isInServiceArea(reportData.coords?.lat, reportData.coords?.lng)
@@ -243,9 +247,11 @@ export default function Step3Review() {
     setSubmitting(false)
     if (error) {
       setSubmitError('Failed to submit report. Please try again.')
+      isSubmittingRef.current = false
       return false
     }
     invalidate()
+    isSubmittingRef.current = false
     return true
   }
 
