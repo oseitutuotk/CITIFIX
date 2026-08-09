@@ -45,15 +45,19 @@ Deno.serve(async (req) => {
 
     // Build Gemini prompt
     const prompt = `You are an AI assistant for CitiFix, a municipal issue reporting system in Ghana.
-Analyse this citizen report and return a JSON object with these exact fields:
+Analyse this citizen report text and any attached images to evaluate the issue accurately and return a JSON object with these exact fields:
 - title: A short clear title (max 10 words)
 - ai_summary: A single concise sentence summary for assembly staff (max 20 words)
 - ai_category: Specific infrastructure category (e.g. "Road Damage", "Street Lighting", "Drainage Blockage")
 - ai_severity: Exactly one of: Low, Medium, or High
-- ai_priority: Integer from 1 to 5 (5 most urgent)
+- ai_priority: Urgent rating from 1 (lowest priority) to 5 (critical/life-threatening safety hazard) (integer)
 - ai_tags: Array of 3-5 short descriptive tags
 - ai_department: Most relevant department (e.g. "Roads & Transport Department", "Water & Sanitation Department", "Electrical Department", "Waste Management Department")
 - moderation_flag: true if inappropriate content, false otherwise
+
+Evaluation Rules:
+1. Cross-reference visual details from any attached image(s) with the text description to confirm severity and details.
+2. If description details are vague, rely on visual evidence if available.
 
 Report:
 Category: ${report.category}
