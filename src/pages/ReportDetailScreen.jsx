@@ -17,6 +17,7 @@ import {
   TriangleAlert,
   ChevronLeft,
   ChevronRight,
+  X,
   FileText,
   Loader2,
   AlertCircle,
@@ -270,6 +271,7 @@ export default function ReportDetailScreen() {
   const [comment, setComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
   const [comments, setComments] = useState([])
+  const [viewerIndex, setViewerIndex] = useState(null) // null = closed
 
   useEffect(() => {
     async function loadReport() {
@@ -453,7 +455,8 @@ export default function ReportDetailScreen() {
                 <img
                   src={photos[0].storage_url}
                   alt="Report photo"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setViewerIndex(0)}
                 />
                 <div className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-0.5 flex items-center gap-1">
                   <Camera size={10} className="text-white" />
@@ -572,6 +575,85 @@ export default function ReportDetailScreen() {
           </button>
         </div>
       </div>
+
+      {viewerIndex !== null && (
+        <PhotoViewer
+          photos={photos}
+          index={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function PhotoViewer({ photos, index, onClose }) {
+  const [current, setCurrent] = useState(index)
+
+  function prev() { setCurrent((i) => Math.max(0, i - 1)) }
+  function next() { setCurrent((i) => Math.min(photos.length - 1, i + 1)) }
+
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      <div className="flex items-center justify-between px-4 py-3 shrink-0">
+        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/20 tap-active">
+          <X size={18} className="text-white" />
+        </button>
+        <span className="text-white text-sm font-medium">
+          {current + 1} / {photos.length}
+        </span>
+        <div className="w-9" />
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-4 min-h-0">
+        <img
+          src={photos[current]?.storage_url}
+          alt={`Photo ${current + 1}`}
+          className="max-w-full max-h-full object-contain rounded-xl"
+        />
+      </div>
+
+      {photos.length > 1 && (
+        <div className="flex items-center justify-between px-4 py-4 shrink-0">
+          <button
+            onClick={prev}
+            disabled={current === 0}
+            className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center tap-active disabled:opacity-30"
+          >
+            <ChevronLeft size={20} className="text-white" />
+          </button>
+
+          <div className="flex gap-1.5">
+            {photos.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`w-2 h-2 rounded-full cursor-pointer transition-colors ${
+                  i === current ? 'bg-white' : 'bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={next}
+            disabled={current === photos.length - 1}
+            className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center tap-active disabled:opacity-30"
+          >
+            <ChevronRight size={20} className="text-white" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
