@@ -5,6 +5,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function fetchAndCompressPhoto(url) {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Photo fetch failed with status ${response.status}`)
+  }
+
+  const mimeType = response.headers.get('content-type') || 'image/jpeg'
+  const sourceBuffer = await response.arrayBuffer()
+  let finalBuffer = sourceBuffer
+  let finalMimeType = mimeType
+
+  if (typeof createImageBitmap === 'function' && typeof OffscreenCanvas === 'function') {
+    try {
+      const bitmap = await createImageBitmap(new Blob([sourceBuffer], { type: mimeType }))
+      const maxDimension = 1200
+      let width = bitmap.width
+      let height = bitmap.height
+
+      if (Math.max(width, height) > maxDimension) {
+        const scale = maxDimension / Math.max(width, height)
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+      }
+
+      const canvas = new OffscreenCanvas(width, height)
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(bitmap, 0, 0, width, height)
+        const compressedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.7 })
+        finalBuffer = await compressedBlob.arrayBuffer()
+        finalMimeType = compressedBlob.type || 'image/jpeg'
+      }
+    } catch (err) {
+      console.error('Image compression failed, using original image:', err)
+    }
+  }
+
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(finalBuffer)))
+  return {
+    inline_data: { mime_type: finalMimeType, data: base64 }
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -50,22 +93,13 @@ Deno.serve(async (req) => {
       .eq('report_id', report_id)
       .limit(2)
 
-    // Download and convert photos to base64 for Gemini vision
+    // Download, optionally compress, and convert photos to base64 for Gemini vision
     const imageParts = []
     if (photos && photos.length > 0) {
       for (const photo of photos) {
         try {
-          const imgResponse = await fetch(photo.storage_url)
-          if (imgResponse.ok) {
-            const arrayBuffer = await imgResponse.arrayBuffer()
-            const base64 = btoa(
-              String.fromCharCode(...new Uint8Array(arrayBuffer))
-            )
-            const mimeType = imgResponse.headers.get('content-type') || 'image/jpeg'
-            imageParts.push({
-              inline_data: { mime_type: mimeType, data: base64 }
-            })
-          }
+          const photoPart = await fetchAndCompressPhoto(photo.storage_url)
+          imageParts.push(photoPart)
         } catch (err) {
           console.error('Photo fetch error:', err)
         }
