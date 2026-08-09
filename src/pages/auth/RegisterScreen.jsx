@@ -32,7 +32,12 @@ export default function RegisterScreen() {
     const { error } = await signUp(email, password, fullName)
     setLoading(false)
     if (error) {
-      setError(error.message)
+      if (error.message?.toLowerCase().includes('already registered') ||
+          error.message?.toLowerCase().includes('already been registered')) {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else {
+        setError(error.message)
+      }
       return
     }
     // Show inline confirmation state instead of navigating away
@@ -205,7 +210,17 @@ export default function RegisterScreen() {
             </div>
 
             {error && (
-              <p className="text-xs text-red-500 text-center -mt-1">{error}</p>
+              <div className="space-y-2">
+                <p className="text-xs text-red-500 text-center">{error}</p>
+                {error.includes('already exists') && (
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="w-full border border-blue-200 text-blue-600 font-semibold py-2.5 rounded-xl text-sm tap-active"
+                  >
+                    Go to Sign In
+                  </button>
+                )}
+              </div>
             )}
 
             <button
