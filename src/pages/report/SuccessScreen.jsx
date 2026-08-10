@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Info, ChevronRight, AlertCircle } from 'lucide-react'
-import BottomNav from '../../components/BottomNav.jsx'
+// BottomNav intentionally omitted on success screen
 import { useReport } from '../../hooks/useReport.js'
 import { useReports } from '../../context/ReportsContext.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
@@ -170,7 +170,7 @@ export default function SuccessScreen() {
         </button>
       </div>
 
-      <BottomNav />
+      {/* BottomNav hidden on success screen to present a focused confirmation view */}
     </div>
   )
 }

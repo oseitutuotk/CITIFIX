@@ -37,7 +37,13 @@ export default function BottomNav() {
   const { pathname } = useLocation()
 
   return (
-    <nav className="h-16 bg-white border-t border-gray-100 flex items-center z-50">
+    <nav
+      className="bg-white border-t border-gray-100 flex items-center z-50"
+      style={{
+        height: 'calc(64px + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
       {tabs.map(({ id, label, icon: Icon, path, match }) => {
         const isActive = match.includes(pathname)
 

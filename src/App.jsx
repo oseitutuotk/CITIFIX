@@ -111,7 +111,10 @@ export default function App() {
         <AuthProvider>
           <ReportsProvider>
             <ReportProvider>
-              <AppRoutes />
+              {/* Ensure routed pages fill the app-shell height so components using `h-full` work */}
+              <div className="page-scroll">
+                <AppRoutes />
+              </div>
             </ReportProvider>
           </ReportsProvider>
         </AuthProvider>
