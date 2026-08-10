@@ -42,7 +42,18 @@ async function fetchAndCompressPhoto(url) {
     }
   }
 
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(finalBuffer)))
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer)
+    const chunkSize = 0x8000
+    let binary = ''
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize)
+      binary += String.fromCharCode.apply(null, chunk)
+    }
+    return btoa(binary)
+  }
+
+  const base64 = arrayBufferToBase64(finalBuffer)
   return {
     inline_data: { mime_type: finalMimeType, data: base64 }
   }
