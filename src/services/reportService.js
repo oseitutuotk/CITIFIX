@@ -1,20 +1,40 @@
 import { supabase } from '../lib/supabase.js'
+import { getFiles, removeFiles } from '../lib/fileStore.js'
 
 // ── Upload photos to Supabase Storage ─────────────────────────────────────────
 // Takes an array of local object URLs (from URL.createObjectURL),
 // converts them back to Blobs, and uploads to the report-photos bucket.
 // Returns an array of public storage URLs.
 
-async function uploadPhotos(photoUrls, userId, reportId) {
+async function uploadPhotos(photoUrls, originalFileIds = [], userId, reportId) {
   if (!photoUrls || photoUrls.length === 0) return []
 
   const uploadedUrls = []
 
-  for (const url of photoUrls) {
+  // If original file ids were provided, try to read them from IndexedDB
+  let originalFiles = []
+  try {
+    if (Array.isArray(originalFileIds) && originalFileIds.length) {
+      originalFiles = await getFiles(originalFileIds)
+    }
+  } catch (e) {
+    originalFiles = []
+  }
+
+  const removedOriginalIds = []
+
+  for (let i = 0; i < photoUrls.length; i++) {
+    const url = photoUrls[i]
     try {
-      // Convert object URL back to a Blob for upload
-      const response = await fetch(url)
-      const blob = await response.blob()
+      let blob
+      const origFile = originalFiles[i]
+      if (origFile instanceof Blob) {
+        blob = origFile
+      } else {
+        // Convert preview/data URL back to a Blob for upload
+        const response = await fetch(url)
+        blob = await response.blob()
+      }
 
       // Folder structure: {userId}/{reportId}/{timestamp}.jpg
       // Guest uploads go under 'guest' folder
@@ -39,9 +59,22 @@ async function uploadPhotos(photoUrls, userId, reportId) {
         .getPublicUrl(data.path)
 
       uploadedUrls.push(publicUrl)
+
+      // If we used an original file stored in IndexedDB, schedule its removal
+      const origId = Array.isArray(originalFileIds) ? originalFileIds[i] : null
+      if (origId) removedOriginalIds.push(origId)
     } catch (err) {
       console.error('Photo processing error:', err)
       continue
+    }
+  }
+
+  // Remove any originals that were uploaded successfully
+  if (removedOriginalIds.length) {
+    try {
+      await removeFiles(removedOriginalIds)
+    } catch (e) {
+      // ignore removal errors
     }
   }
 
@@ -57,8 +90,8 @@ export async function submitReport(reportData, userId, deviceId) {
   // Step 1 — Generate a report ID upfront so we can use it for photo paths
   const reportId = crypto.randomUUID()
 
-  // Step 2 — Upload photos first (if any)
-  const photoUrls = await uploadPhotos(reportData.photos, userId, reportId)
+  // Step 2 — Upload photos first (if any). Use any stored original files to resume uploads.
+  const photoUrls = await uploadPhotos(reportData.photos, reportData.originalFileIds || [], userId, reportId)
 
   // Step 3 — Insert the report row
   const { data: report, error: reportError } = await supabase

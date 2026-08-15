@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronRight,
@@ -18,6 +18,7 @@ import BottomNav from '../../components/BottomNav.jsx'
 import StepIndicator from '../../components/StepIndicator.jsx'
 import { useReport } from '../../hooks/useReport.js'
 import { useExifGps } from '../../hooks/useExifGps.js'
+import { addFiles, removeFiles } from '../../lib/fileStore.js'
 
 const CATEGORIES = [
   { id: 'roads',        label: 'Roads',        icon: Route         },
@@ -72,9 +73,102 @@ export default function Step1Details() {
     const remaining = MAX_PHOTOS - photos.length
     const toAdd = files.slice(0, remaining)
 
-    // Convert each File to a local object URL for preview
-    const newPhotos = toAdd.map((file) => URL.createObjectURL(file))
-    setPhotos((prev) => [...prev, ...newPhotos])
+    // Resize/compress each selected File into a smaller dataURL for preview
+    async function fileToPreviewDataUrl(file) {
+      try {
+        // Prefer createImageBitmap when available
+        let bitmap
+        if (typeof createImageBitmap === 'function') {
+          bitmap = await createImageBitmap(file)
+        }
+
+        return await new Promise((resolve, reject) => {
+          const img = document.createElement('img')
+
+          const onLoadFromBitmap = () => {
+            const maxDim = 1024
+            let width = bitmap.width
+            let height = bitmap.height
+            if (width > height) {
+              if (width > maxDim) {
+                height = Math.round((height *= maxDim / width))
+                width = maxDim
+              }
+            } else {
+              if (height > maxDim) {
+                width = Math.round((width *= maxDim / height))
+                height = maxDim
+              }
+            }
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(bitmap, 0, 0, width, height)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75)
+            resolve(dataUrl)
+          }
+
+          const onLoadFromReader = (dataUrl) => {
+            img.onload = () => {
+              const maxDim = 1024
+              let { width, height } = img
+              if (width > height) {
+                if (width > maxDim) {
+                  height = Math.round((height *= maxDim / width))
+                  width = maxDim
+                }
+              } else {
+                if (height > maxDim) {
+                  width = Math.round((width *= maxDim / height))
+                  height = maxDim
+                }
+              }
+              const canvas = document.createElement('canvas')
+              canvas.width = width
+              canvas.height = height
+              const ctx = canvas.getContext('2d')
+              ctx.drawImage(img, 0, 0, width, height)
+              const out = canvas.toDataURL('image/jpeg', 0.75)
+              resolve(out)
+            }
+            img.onerror = reject
+            img.src = dataUrl
+          }
+
+          if (bitmap) {
+            onLoadFromBitmap()
+          } else {
+            const reader = new FileReader()
+            reader.onload = () => onLoadFromReader(reader.result)
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          }
+        })
+      } catch (err) {
+        // fallback to object URL if something goes wrong
+        return URL.createObjectURL(file)
+      }
+    }
+
+    // Persist original files to IndexedDB so they can be resumed after restarts
+    let ids = []
+    try {
+      ids = await addFiles(toAdd)
+    } catch (e) {
+      // ignore store failures; continue with previews
+      ids = []
+    }
+
+    const previews = await Promise.all(toAdd.map((f) => fileToPreviewDataUrl(f)))
+    setPhotos((prev) => {
+      const next = [...prev, ...previews]
+      // Persist incremental photos and original file ids to context immediately so state survives reload
+      const prevIds = Array.isArray(reportData.originalFileIds) ? reportData.originalFileIds : []
+      const nextIds = [...prevIds, ...ids]
+      updateReport({ photos: next, originalFileIds: nextIds })
+      return next
+    })
 
     // Try to extract GPS from the first new photo only
     const gpsCoords = await extractGps(toAdd[0])
@@ -88,7 +182,18 @@ export default function Step1Details() {
   }
 
   function handleRemovePhoto(indexToRemove) {
-    setPhotos((prev) => prev.filter((_, i) => i !== indexToRemove))
+    setPhotos((prev) => {
+      const next = prev.filter((_, i) => i !== indexToRemove)
+      // remove corresponding original file id if present
+      const prevIds = Array.isArray(reportData.originalFileIds) ? reportData.originalFileIds : []
+      const removeId = prevIds[indexToRemove]
+      const nextIds = prevIds.filter((_, i) => i !== indexToRemove)
+      updateReport({ photos: next, originalFileIds: nextIds })
+      if (removeId) {
+        removeFiles([removeId]).catch(() => {})
+      }
+      return next
+    })
   }
 
   function handleContinue() {
@@ -96,6 +201,17 @@ export default function Step1Details() {
     updateReport({ photos })
     navigate('/report/step2')
   }
+
+  // Revoke any object URLs on unmount to free memory
+  useEffect(() => {
+    return () => {
+      photos.forEach((p) => {
+        try {
+          if (typeof p === 'string' && p.startsWith('blob:')) URL.revokeObjectURL(p)
+        } catch (e) {}
+      })
+    }
+  }, [photos])
 
   return (
     <div className="flex flex-col h-full bg-gray-50">

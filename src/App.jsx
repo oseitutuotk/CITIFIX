@@ -26,6 +26,9 @@ import AuthCallbackScreen from './pages/auth/AuthCallbackScreen.jsx'
 // Providers
 import { ReportProvider } from './context/ReportContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+import RecoveryBanner from './components/RecoveryBanner.jsx'
+import { useEffect } from 'react'
 
 // ── Loading screen — shown while Supabase checks session ──────────────────────
 function LoadingScreen() {
@@ -72,7 +75,9 @@ function GuestEntryRoute({ children }) {
 // ── Routes ────────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <RecoveryBanner />
+      <Routes>
       {/* Splash — always accessible */}
       <Route path="/splash" element={<SplashScreen />} />
 
@@ -101,18 +106,58 @@ function AppRoutes() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/splash" replace />} />
     </Routes>
+    </>
   )
 }
 
 export default function App() {
+  // Global error logging: persist last error to localStorage for diagnostics
+  useEffect(() => {
+    function handleError(event) {
+      try {
+        const payload = {
+          message: event.message || String(event),
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          stack: event.error?.stack,
+          time: Date.now(),
+        }
+        localStorage.setItem('citifix:last_error', JSON.stringify(payload))
+      } catch (e) {}
+      // still log to console
+      console.error('Captured error', event)
+    }
+
+    function handleRejection(evt) {
+      try {
+        const payload = {
+          message: evt.reason?.message || String(evt.reason),
+          stack: evt.reason?.stack,
+          time: Date.now(),
+        }
+        localStorage.setItem('citifix:last_error', JSON.stringify(payload))
+      } catch (e) {}
+      console.error('Unhandled rejection', evt)
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleRejection)
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleRejection)
+    }
+  }, [])
   return (
     <BrowserRouter>
       <div className="app-shell">
         <AuthProvider>
           <ReportsProvider>
-            <ReportProvider>
-              <AppRoutes />
-            </ReportProvider>
+            <ErrorBoundary>
+              <ReportProvider>
+                <AppRoutes />
+              </ReportProvider>
+            </ErrorBoundary>
           </ReportsProvider>
         </AuthProvider>
       </div>
