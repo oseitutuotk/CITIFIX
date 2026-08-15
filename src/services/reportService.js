@@ -86,9 +86,28 @@ async function uploadPhotos(photoUrls, originalFileIds = [], userId, reportId) {
 // userId     — from AuthContext (null if guest)
 // deviceId   — from localStorage (for guest report linking)
 
+function genUUID() {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID()
+    }
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16)
+      crypto.getRandomValues(bytes)
+      bytes[6] = (bytes[6] & 0x0f) | 0x40
+      bytes[8] = (bytes[8] & 0x3f) | 0x80
+      const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+      return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`
+    }
+  } catch (e) {
+    // fallback
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2,9)}`
+}
+
 export async function submitReport(reportData, userId, deviceId) {
   // Step 1 — Generate a report ID upfront so we can use it for photo paths
-  const reportId = crypto.randomUUID()
+  const reportId = genUUID()
 
   // Step 2 — Upload photos first (if any). Use any stored original files to resume uploads.
   const photoUrls = await uploadPhotos(reportData.photos, reportData.originalFileIds || [], userId, reportId)
