@@ -62,9 +62,10 @@ export function ReportProvider({ children }) {
   }
 
   function updateReport(fields) {
-    setReportData((prev) => {
-      const next = { ...prev, ...fields }
-      return next
+    // Defer updates slightly to avoid React warning when called during another
+    // component's render phase (e.g., event handlers that resolve synchronously).
+    Promise.resolve().then(() => {
+      setReportData((prev) => ({ ...prev, ...fields }))
     })
   }
 
