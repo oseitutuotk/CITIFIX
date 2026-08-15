@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -190,6 +190,17 @@ export default function Step3Review() {
   const [duplicateDetected, setDuplicateDetected] = useState(false)
   const [similarReport, setSimilarReport] = useState(null)
   const isSubmittingRef = useRef(false)
+  const reviewScrollRef = useRef(null)
+
+  useEffect(() => {
+    if (!showGeofenceWarning) return
+
+    if (reviewScrollRef.current) {
+      reviewScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [showGeofenceWarning])
 
   const categoryInfo = CATEGORY_INFO[reportData.category] || CATEGORY_INFO.other
   const CategoryIcon = categoryInfo.icon
@@ -288,7 +299,7 @@ export default function Step3Review() {
     <div className="flex flex-col h-full bg-gray-50">
       <AppHeader title="Review Your Report" onBack={() => navigate('/report/step2')} />
 
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4">
+      <div ref={reviewScrollRef} className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4">
 
         <StepIndicator current={3} />
 
