@@ -27,7 +27,6 @@ import AuthCallbackScreen from './pages/auth/AuthCallbackScreen.jsx'
 import { ReportProvider } from './context/ReportContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
-import RecoveryBanner from './components/RecoveryBanner.jsx'
 import { useEffect } from 'react'
 
 // ── Loading screen — shown while Supabase checks session ──────────────────────
@@ -75,9 +74,7 @@ function GuestEntryRoute({ children }) {
 // ── Routes ────────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
-    <>
-      <RecoveryBanner />
-      <Routes>
+    <Routes>
       {/* Splash — always accessible */}
       <Route path="/splash" element={<SplashScreen />} />
 
@@ -106,7 +103,6 @@ function AppRoutes() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/splash" replace />} />
     </Routes>
-    </>
   )
 }
 
