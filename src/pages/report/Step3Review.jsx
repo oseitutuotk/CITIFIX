@@ -268,12 +268,16 @@ export default function Step3Review() {
 
   async function handleSubmit() {
     if (submitting) return
+    
+    setSubmitting(true)
     const inArea = isInServiceArea(reportData.coords?.lat, reportData.coords?.lng)
     if (!inArea && !geofenceAcknowledged) {
+      setSubmitting(false)
       setShowGeofenceWarning(true)
       return
     }
     if (duplicateDetected) {
+      setSubmitting(false)
       setShowDuplicate(true)
       return
     }
@@ -285,6 +289,7 @@ export default function Step3Review() {
     )
 
     if (duplicate) {
+      setSubmitting(false)
       setSimilarReport(formatDuplicate(duplicate))
       setDuplicateDetected(true)
       setShowDuplicate(true)
@@ -326,6 +331,7 @@ export default function Step3Review() {
                 onClick={async () => {
                   setShowGeofenceWarning(false)
                   setGeofenceAcknowledged(true)
+                  setSubmitting(true)
 
                   if (!duplicateDetected) {
                     const { data: duplicate } = await checkDuplicateReport(
@@ -335,6 +341,7 @@ export default function Step3Review() {
                     )
 
                     if (duplicate) {
+                      setSubmitting(false)
                       setSimilarReport(formatDuplicate(duplicate))
                       setDuplicateDetected(true)
                       setShowDuplicate(true)
