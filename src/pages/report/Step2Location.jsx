@@ -48,6 +48,7 @@ export default function Step2Location() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [showExifNotice, setShowExifNotice] = useState(!!reportData.exifCoords)
+  const [locating, setLocating] = useState(false)
 
   const { address, loading: addressLoading } = useReverseGeocode(position)
   const { results, loading: searchLoading, search, clearResults } = useLocationSearch()
@@ -68,11 +69,15 @@ export default function Step2Location() {
     }
   }, [gpsCoords, reportData.exifCoords])
 
-  function handleUseMyLocation() {
+  async function handleUseMyLocation() {
+    setLocating(true)
     if (gpsCoords) {
       setPosition(gpsCoords)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setLocating(false)
     } else {
-      refetch()
+      await refetch()
+      setLocating(false)
     }
   }
 
@@ -224,10 +229,14 @@ export default function Step2Location() {
 
         <button
           onClick={handleUseMyLocation}
-          className="w-full bg-blue-600 text-white font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-2 tap-active"
+          disabled={locating}
+          className="w-full bg-blue-600 disabled:bg-blue-400 text-white font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-2 tap-active"
         >
-          <Navigation size={15} />
-          Use My Current Location
+          {locating ? (
+            <><Loader2 size={15} className="animate-spin" /> Locating...</>
+          ) : (
+            <><Navigation size={15} /> Use My Current Location</>
+          )}
         </button>
 
         <div className="flex gap-2">
@@ -240,10 +249,10 @@ export default function Step2Location() {
           </button>
           <button
             onClick={handleNext}
-            className="flex-1 bg-blue-600 text-white font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1 tap-active"
+            disabled={locating}
+            className="flex-1 bg-blue-600 disabled:bg-blue-400 text-white font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1 tap-active"
           >
-            Next Step
-            <ChevronRight size={15} />
+            Next Step <ChevronRight size={15} />
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // useGeolocation — wraps the browser Geolocation API.
 // Requests permission immediately on mount.
@@ -8,31 +8,38 @@ export function useGeolocation() {
   const [coords, setCoords] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const refetchPromiseRef = useRef(null)
 
   function fetchLocation() {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by this browser.')
-      setLoading(false)
-      return
-    }
-
     setLoading(true)
     setError(null)
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        setError('Geolocation is not supported by this browser.')
         setLoading(false)
-      },
-      (err) => {
-        setError(err.message)
-        setLoading(false)
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+        resolve(null)
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newCoords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          }
+          setCoords(newCoords)
+          setLoading(false)
+          resolve(newCoords)
+        },
+        (err) => {
+          setError(err.message)
+          setLoading(false)
+          resolve(null)
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      )
+    })
   }
 
   // Request location automatically when the hook mounts
