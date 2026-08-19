@@ -24,6 +24,7 @@ export function mapReport(report) {
       year: 'numeric',
     }),
     photo_urls: report.report_photos?.map((p) => p.storage_url) || [],
+    reference_code: report.reference_code || null,
   }
 }
 

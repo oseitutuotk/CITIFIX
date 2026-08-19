@@ -441,6 +441,16 @@ export default function ReportDetailScreen() {
               <MapPin size={11} /> {report.location_name || 'Location not set'}
             </span>
           </div>
+          {report.reference_code && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                Reference:
+              </span>
+              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                {report.reference_code}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Swipeable carousel */}

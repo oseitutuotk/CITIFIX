@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Info, ChevronRight, AlertCircle } from 'lucide-react'
 // BottomNav intentionally omitted on success screen
 import { useReport } from '../../hooks/useReport.js'
 import { useReports } from '../../context/ReportsContext.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 
-function generateReferenceId() {
-  const random = Math.floor(10000 + Math.random() * 90000)
-  return `#CFX-${random}-ACCRA`
-}
 
 // Animated checkmark drawn via SVG stroke-dashoffset animation.
 // The circle and the tick both draw in sequence for a satisfying
@@ -85,7 +81,8 @@ export default function SuccessScreen() {
   const { isGuest } = useAuth()
   const { invalidate } = useReports()
 
-  const [referenceId] = useState(generateReferenceId)
+  const location = useLocation()
+  const referenceCode = location.state?.referenceCode || null
 
   useEffect(() => {
     resetReport()
@@ -115,7 +112,7 @@ export default function SuccessScreen() {
             Reference ID
           </p>
           <p className="text-sm font-bold text-gray-900 truncate">
-            {referenceId}
+            {referenceCode || 'Processing...'}
           </p>
         </div>
         <span className="text-xs font-semibold text-orange-600 bg-orange-100 px-2.5 py-1 rounded-full shrink-0">

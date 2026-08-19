@@ -100,6 +100,8 @@ export default function ReportCard({ report }) {
           {displayTitle}
         </p>
 
+        
+
         {/* Status badge + location */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">

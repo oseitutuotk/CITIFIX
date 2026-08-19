@@ -240,13 +240,13 @@ export default function Step3Review() {
   }
 
   async function doSubmit() {
-    if (isSubmittingRef.current) return false
+    if (isSubmittingRef.current) return { success: false }
     isSubmittingRef.current = true
 
     setSubmitting(true)
     setSubmitError('')
     const inArea = isInServiceArea(reportData.coords?.lat, reportData.coords?.lng)
-    const { error } = await submitReport(
+    const { data, error } = await submitReport(
       {
         ...reportData,
         is_in_service_area: inArea,
@@ -259,11 +259,11 @@ export default function Step3Review() {
     if (error) {
       setSubmitError('Failed to submit report. Please try again.')
       isSubmittingRef.current = false
-      return false
+        return { success: false }
     }
-    invalidate()
-    isSubmittingRef.current = false
-    return true
+      invalidate()
+      isSubmittingRef.current = false
+      return { success: true, referenceCode: data?.reference_code }
   }
 
   async function handleSubmit() {
@@ -296,8 +296,8 @@ export default function Step3Review() {
       return
     }
 
-    const success = await doSubmit()
-    if (success) navigate('/report/success')
+    const result = await doSubmit()
+    if (result.success) navigate('/report/success', { state: { referenceCode: result.referenceCode } })
   }
 
   return (
@@ -349,8 +349,8 @@ export default function Step3Review() {
                     }
                   }
 
-                  const success = await doSubmit()
-                  if (success) navigate('/report/success')
+                  const result = await doSubmit()
+                  if (result.success) navigate('/report/success', { state: { referenceCode: result.referenceCode } })
                 }}
                 className="flex-1 bg-amber-500 text-white font-bold py-2.5 rounded-xl text-sm tap-active"
               >
@@ -491,10 +491,10 @@ export default function Step3Review() {
           similarReport={similarReport}
           onDismiss={() => setShowDuplicate(false)}
           onSubmitAnyway={async () => {
-            const success = await doSubmit()
-            if (success) {
+            const result = await doSubmit()
+            if (result.success) {
               setShowDuplicate(false)
-              navigate('/report/success')
+              navigate('/report/success', { state: { referenceCode: result.referenceCode } })
             }
           }}
           submitting={submitting}
