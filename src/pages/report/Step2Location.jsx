@@ -40,6 +40,11 @@ function MapRecenter({ position }) {
 }
 
 export default function Step2Location() {
+  // Load Leaflet CSS dynamically to avoid shipping it in the initial bundle
+  // (index.css no longer imports leaflet.css)
+  useEffect(() => {
+    import('leaflet/dist/leaflet.css').catch(() => {})
+  }, [])
   const navigate = useNavigate()
   const { reportData, updateReport } = useReport()
   const { coords: gpsCoords, loading: gpsLoading, error: gpsError, refetch } = useGeolocation()

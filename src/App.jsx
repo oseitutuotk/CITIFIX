@@ -1,27 +1,28 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth.js'
 import { ReportsProvider } from './context/ReportsContext.jsx'
+import { lazy, Suspense } from 'react'
 
-// Pages
-import SplashScreen from './pages/SplashScreen.jsx'
-import WelcomeScreen from './pages/auth/WelcomeScreen.jsx'
-import GuestEntryScreen from './pages/auth/GuestEntryScreen.jsx'
-import HomeScreen from './pages/HomeScreen.jsx'
-import MyReportsScreen from './pages/MyReportsScreen.jsx'
-import ReportDetailScreen from './pages/ReportDetailScreen.jsx'
-import ProfileScreen from './pages/ProfileScreen.jsx'
-import NotificationsScreen from './pages/NotificationsScreen.jsx'
+// Pages (lazy-loaded for smaller initial bundle)
+const SplashScreen = lazy(() => import('./pages/SplashScreen.jsx'))
+const WelcomeScreen = lazy(() => import('./pages/auth/WelcomeScreen.jsx'))
+const GuestEntryScreen = lazy(() => import('./pages/auth/GuestEntryScreen.jsx'))
+const HomeScreen = lazy(() => import('./pages/HomeScreen.jsx'))
+const MyReportsScreen = lazy(() => import('./pages/MyReportsScreen.jsx'))
+const ReportDetailScreen = lazy(() => import('./pages/ReportDetailScreen.jsx'))
+const ProfileScreen = lazy(() => import('./pages/ProfileScreen.jsx'))
+const NotificationsScreen = lazy(() => import('./pages/NotificationsScreen.jsx'))
 
 // Report flow pages
-import Step1Details from './pages/report/Step1Details.jsx'
-import Step2Location from './pages/report/Step2Location.jsx'
-import Step3Review from './pages/report/Step3Review.jsx'
-import SuccessScreen from './pages/report/SuccessScreen.jsx'
+const Step1Details = lazy(() => import('./pages/report/Step1Details.jsx'))
+const Step2Location = lazy(() => import('./pages/report/Step2Location.jsx'))
+const Step3Review = lazy(() => import('./pages/report/Step3Review.jsx'))
+const SuccessScreen = lazy(() => import('./pages/report/SuccessScreen.jsx'))
 
 // Auth pages
-import LoginScreen from './pages/auth/LoginScreen.jsx'
-import RegisterScreen from './pages/auth/RegisterScreen.jsx'
-import AuthCallbackScreen from './pages/auth/AuthCallbackScreen.jsx'
+const LoginScreen = lazy(() => import('./pages/auth/LoginScreen.jsx'))
+const RegisterScreen = lazy(() => import('./pages/auth/RegisterScreen.jsx'))
+const AuthCallbackScreen = lazy(() => import('./pages/auth/AuthCallbackScreen.jsx'))
 
 // Providers
 import { ReportProvider } from './context/ReportContext.jsx'
@@ -74,7 +75,8 @@ function GuestEntryRoute({ children }) {
 // ── Routes ────────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
-    <Routes>
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
       {/* Splash — always accessible */}
       <Route path="/splash" element={<SplashScreen />} />
 
@@ -102,7 +104,8 @@ function AppRoutes() {
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/splash" replace />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   )
 }
 

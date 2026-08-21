@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import exifr from 'exifr'
+import { gps as exifrGps } from 'exifr'
 
 // useExifGps — extracts GPS coordinates from a photo File's EXIF metadata.
 // Returns { extractGps, coords, hasExif, loading }
@@ -21,7 +21,7 @@ export function useExifGps() {
     setLoading(true)
     try {
       // exifr.gps() returns { latitude, longitude } or undefined
-      const gps = await exifr.gps(file)
+      const gps = await exifrGps(file)
 
       if (gps?.latitude && gps?.longitude) {
         const extracted = { lat: gps.latitude, lng: gps.longitude }
