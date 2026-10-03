@@ -2,8 +2,12 @@
   "name": "CitiFix",
   "short_name": "CitiFix",
   "description": "Report infrastructure issues to your Municipal Assembly",
+  "id": "/",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
+  "launch_handler": { "client_mode": "navigate-existing" },
+  "handle_links": "preferred",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
